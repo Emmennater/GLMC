@@ -1,4 +1,10 @@
 
+/*******************************/
+/*** AUTHOR: Emmett Jaakkola ***/
+/*** DATE: 10/23/2022 *********/
+/*******************************/
+
+
 var initProgram = async function() {
   
   await sleep(100);

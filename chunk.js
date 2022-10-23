@@ -67,23 +67,11 @@ function generateChunk(x, z) {
     // chunks are generated
     let cx = x,
         cz = z;
-    for (let i = 0; i < 4; i++) {
-        cx = x;
-        cz = z;
-        switch (i) {
-            case 0:
-                cx--;
-                break;
-            case 1:
-                cx++;
-                break;
-            case 2:
-                cz--;
-                break;
-            case 3:
-                cz++;
-                break;
-        }
+    for (let x1=-1; x1<=1; x1++) {
+    for (let z1=-1; z1<=1; z1++) {
+        if (x1 == 0 && z1 == 0) continue;
+        cx = x+x1;
+        cz = z+z1;
 
         if (Chunks[cx] == undefined) {
             Chunks[cx] = {};
@@ -93,7 +81,7 @@ function generateChunk(x, z) {
             Chunks[cx][cz].blocks = Generate(cx, cz, seed);
             return DELAY; // 10 delay
         }
-    }
+    }}
 
     // Build Chunk if not done so already
     if (Chunks[x] == undefined) Chunks[x] = {};
