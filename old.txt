@@ -1,0 +1,90 @@
+
+// for (let i=0; i<CUBE_VERTICES.length; i+=5) {
+    //   let vt = CUBE_VERTICES;
+    //   let U = this.txr[2*side+0];
+    //   let V = this.txr[2*side+1];
+    //   if (index++ % 4 == 3) {
+    //     side = (side + 1) % 6;
+    //   }
+    //   let u = (vt[i+3] + U) / TXRW;
+    //   let v = (vt[i+4] + V) / TXRH;
+
+    //   // Push vertices
+    //   cubeVertices.push(
+    //     vt[i+0] / 2 * this.l + this.x,
+    //     vt[i+1] / 2 * this.w + this.y,
+    //     vt[i+2] / 2 * this.h + this.z,
+    //     u,
+    //     v
+    //   );
+    // }
+    
+    // let len = cubeIndices.length / 36 * 24; // length 36, but 24 difference vertices
+    // for (let i=0; i<CUBE_INDICES.length; i++) {
+    //   let idx = CUBE_INDICES[i];
+    //   cubeIndices.push(len+idx);
+    // }
+    
+    // count += 36;
+
+
+
+
+// Draw each buffer
+    for (let i=0; i<buffers.length; i++) {
+      if (buffers[i].indices.length == 0) continue;
+
+      // Bind the buffers
+      buffers[i].setUsing(gl);
+
+      // Setup attributes
+      setupVertexAttribs();
+
+      // Back face culling
+      buffers[i].setCulling(gl);
+
+      // Draw the elements
+      gl.drawElements(gl.TRIANGLES, buffers[i].indices.length, gl.UNSIGNED_INT, 0); // triangles, skip 0, 3 verticies
+    }
+
+
+// function editBlock(x, y, z, type) {
+//     if (type == null) {
+//         cubes[x+","+y+","+z] = null;
+//     } else {
+//         let cube = new Cube(x, y, z, 1, 1, 1, type);
+//         cubes[x+","+y+","+z] = cube;
+//     }
+
+//     cubeVertices = [];
+//     cubeIndices = [];
+
+//     // Build non transparent
+//     for (let i in cubes) {
+//     if (cubes[i] == null) continue;
+//     cubes[i].build(true, true);
+//     }
+
+//     // Build transparent
+//     for (let i in cubes) {
+//     if (cubes[i] == null) continue;
+//     cubes[i].build(true, false);
+//     }
+
+//     let cubeBuffer = buffers[0];
+//     cubeBuffer.setUsing(gl);
+//     cubeBuffer.setVertices(gl, cubeVertices);
+//     cubeBuffer.setIndices(gl, cubeIndices);
+// }
+
+// TOP
+// 0: + + (0, +) and 0 + +
+      // 1: - + (0, +) and 0 + +
+      // 2: + + (0, -) and 0 + -
+      // 3: - + (0, -) and 0 + -
+
+// LEFT
+// 0: - - (0, -) and - 0 -
+      // 1: - - (0, +) and - 0 +
+      // 2: - + (0, +) and - 0 +
+      // 3: - + (0, -) and - 0 -
