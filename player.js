@@ -32,6 +32,8 @@ class Player {
     this.sprinting = false;
     this.gamemode = "creative";
 
+    this.pgrounded = false;
+    this.pjumped = false;
     this.hovered = null;
     this.hoveredSide = null;
     this.itemSelected = "smooth_stone";
@@ -60,7 +62,9 @@ class Player {
     let movey = 0;
     let movez = 0;
     let mult = 1;
-    
+    let grounded = this.y == this.yMin;
+    let jumped = false;
+
     if (keys.W) {
       let bonus = this.sprinting ? 1.3 : 1;
       movex += -Math.cos(this.xRot + Math.PI/2) * bonus;
@@ -89,7 +93,8 @@ class Player {
         movey += 1;
       }
     } else {
-      if (keys.SPACE && this.y == this.yMin) {
+      if (keys.SPACE && (grounded || (this.pgrounded && !this.pjumped))) {
+        jumped = true;
         this.vy = this.jumpSpeed;
         movex *= this.sprinting ? 1.3 : 1.1;
         movez *= this.sprinting ? 1.3 : 1.1;
@@ -138,6 +143,9 @@ class Player {
       if (this.z < this.zMin) { this.z = this.zMin; this.vz = 0; }
       if (this.z > this.zMax) { this.z = this.zMax; this.vz = 0; }
     }
+
+    this.pgrounded = grounded;
+    this.pjumped = jumped;
     
   }
 
@@ -157,9 +165,54 @@ class Player {
     this.zMin = pZ+-20; let zMin2 = this.zMin;
     this.zMax = pZ+20; let zMax2 = this.zMax;
     let blockSize = 1;
-    
-    // X Movement
     let block, newMin = null;
+    let result = false;
+    let pinside = this.inside;
+    this.inside = false;
+
+    // If overlap stop
+    let PX = pX;
+    let PY = pY;
+    let PZ = pZ;
+    for (let x=floor(PX-this.width/2); x<ceil(PX+this.width/2); x++) {
+      for (let y=floor(PY); y<ceil(PY+this.height); y++) {
+        for (let z=floor(PZ-this.width/2); z<ceil(PZ+this.width/2); z++) {
+          block = getBlock(x, y, z);
+          // drawRect(x, y, z, 1, 1, 1, 1, 0, 0, 0.5);
+          let X = x + 0.5;
+          let Z = z + 0.5;
+          if (!block) continue;
+          let diffx = (PX - (x + 0.5));
+          let diffz = (PZ - (z + 0.5));
+          if (Math.abs(diffx) > Math.abs(diffz)) {
+            this.vx = 0;
+            if (diffx > 0) {
+              this.x = block.x + blockSize/2 + this.w/2;
+            } else {
+              this.x = block.x - blockSize/2 - this.w/2;
+            }
+          } else {
+            this.vz = 0;
+            if (diffz > 0) {
+              this.z = block.z + blockSize/2 + this.w/2;
+            } else {
+              this.z = block.z - blockSize/2 - this.w/2;
+            }
+          }
+
+          this.inside = true;
+
+          // let diffy = ((PY + this.height/2) - y);
+          // diffx -= diffx * Math.sign(diffx) * (this.w/2);
+          // diffz -= diffz * Math.sign(diffz) * (this.w/2);
+          // diffy -= diffy * Math.sign(diffy) * (this.h/2 + 0.5);
+          // if (boxOverlapBox(this, block)) {
+          // }
+        }
+      }
+    }
+
+    // X Movement
     // let xvel = ceil(abs(this.vx)) * Math.sign(this.vx);
     for (let x=floor(pX-this.width/2-1); x>=ceil(pX)-16; x--) {
       for (let y=floor(pY); y<ceil(pY+this.height); y++) {
@@ -289,6 +342,8 @@ class Player {
     // MARKER.w = this.zMax - this.zMin;
     // MARKER.h = this.yMax - this.yMin;
     // MARKER.rebuild();
+
+    return result;
   }
 
   use() {

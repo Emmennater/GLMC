@@ -12,7 +12,7 @@ var initProgram = async function() {
   /** DATA **/
   data = {};
   settings = {};
-  data.renderDistance = 4;
+  data.renderDistance = 8;
   data.renderedChunks = 0;
   data.fogDist = 10;
   data.waitTime = 0;

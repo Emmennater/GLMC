@@ -187,8 +187,9 @@ function createCube(x, y, z, type = "smooth_stone") {
 }
 
 function createBlock(x, y, z, type = "smooth_stone") {
-  let info = {type:type, x:x, y:y, z:z, transparent:false};
+  let info = {type:type, x:x, y:y, z:z};
   info.transparent = isTransparent(type);
+  info.solid = isSolid(type);
   return info;
 }
 
@@ -215,7 +216,7 @@ function getTextureArray(block) {
     case "birch_log":
       return [23, 53, 22, 53, 22, 53, 22, 53, 22, 53, 23, 53];
     case "leaves":
-      return [1, 71];
+      return [144/16, 1136/16];
     case "birch_leaves":
       return [3, 71];
     case "glass":
@@ -246,12 +247,53 @@ function getTexture(block) {
   return arr;
 }
 
+function getColor(block) {
+  let color = [1, 1, 1];
+
+  switch (block) {
+    case "birch_leaves":
+      color = [0.9, 0.9, 0.9];
+      break;
+    case "leaves":
+      // color = [0.7, 0.7, 0.7];
+      // from: (67, 170, 22)
+      // to: (66,88,36)
+      color = [66/67, 88/170, 36/22];
+      break;
+    case "dirt":
+    case "grass":
+      // from: (85,   133,    72)
+      // to:   (83,   107,    50)
+      // color =  [83/85,107/133,50/72];
+
+      // from: (70,108,59)
+      // to: (51,39,23)
+      color = [53/70, 90/108, 37/59];
+      break;
+    case "birch_log":
+    case "log":
+      // from: (57,46,28)
+      // to: (87,72,50)
+      color = [0.8, 0.8, 0.8];
+  }
+
+  return color;
+}
+
 function isTransparent(block) {
   switch (block) {
     case "glass": return true;
     case "leaves": return true;
     case "birch_leaves": return true;
     default: return false; 
+  }
+}
+
+function isSolid(block) {
+  switch (block) {
+    case "leaves": return false;
+    case "birch_leaves": return false;
+    default: return true; 
   }
 }
 
@@ -266,7 +308,7 @@ function buildBlock(buffer, block) {
   let vertices = buffer.vertices;
   let indices = buffer.indices;
 
-  const skipSides = removeFaces(x, y, z);
+  const skipSides = removeFaces(block, x, y, z);
   const TEXTURE_WIDTH = 384; //256;
   const TEXTURE_HEIGHT = 1520; //944;
   const TXRW = TEXTURE_WIDTH / 16;
@@ -276,6 +318,7 @@ function buildBlock(buffer, block) {
   const L = 1, W = 1, H = 1;
   let totalVerts = 0;
   let txr = getTexture(block.type);
+  let color = getColor(block.type);
 
   // Iterate over all 6 sides
   for (let side=0; side<6; side++) {
@@ -298,7 +341,7 @@ function buildBlock(buffer, block) {
       let Y = vt[vstart+1] / 2 * W + y;
       let Z = vt[vstart+2] / 2 * H + z;
 
-      let shadow = calcShadow(x, y, z, side, j);
+      let shadow = calcShadow(block, x, y, z, side, j);
 
       // Push vertices
       vertices.push(
@@ -307,9 +350,9 @@ function buildBlock(buffer, block) {
         Z,
         u,
         v,
-        shade * shadow.r,
-        shade * shadow.g,
-        shade * shadow.b,
+        shade * shadow.r * color[0],
+        shade * shadow.g * color[1],
+        shade * shadow.b * color[2],
         1
       );
     }
@@ -325,46 +368,48 @@ function buildBlock(buffer, block) {
   }
 }
 
-function removeFaces(x, y, z) {
+function removeFaces(b, x, y, z) {
   let block;
   let skipSides = [false, false, false, false, false, false];
 
   // TOP
   block = getBlock(x, y+1, z);
-  if (compareFaces(block)) skipSides[0] = true;
+  if (compareFaces(b, block)) skipSides[0] = true;
   // LEFT
   block = getBlock(x-1, y, z);
-  if (compareFaces(block)) skipSides[1] = true;
+  if (compareFaces(b, block)) skipSides[1] = true;
   // RIGHT
   block = getBlock(x+1, y, z);
-  if (compareFaces(block)) skipSides[2] = true;
+  if (compareFaces(b, block)) skipSides[2] = true;
   // FRONT
   block = getBlock(x, y, z+1);
-  if (compareFaces(block)) skipSides[3] = true;
+  if (compareFaces(b, block)) skipSides[3] = true;
   // BACK
   block = getBlock(x, y, z-1);
-  if (compareFaces(block)) skipSides[4] = true;
+  if (compareFaces(b, block)) skipSides[4] = true;
   // BOTTOM
   block = getBlock(x, y-1, z);
-  if (compareFaces(block)) skipSides[5] = true;
+  if (compareFaces(b, block)) skipSides[5] = true;
 
   return skipSides;
 }
 
-function compareFaces(block) {
-  if (!block) return false;
-  if (this.transparent && block.transparent) return true;
-  if (!this.transparent && !block.transparent) return true;
+function compareFaces(b1, b2) {
+  if (!b2) return false;
+  if (!b1.solid && !b2.solid) return false;
+  if (b1.transparent && b2.transparent) return true;
+  if (!b1.transparent && !b2.transparent) return true;
   return false;
 }
 
-function calcShadow(x, y, z, side, vt) {
+function calcShadow(block, x, y, z, side, vt) {
   let shadow = 1;
   let color = {r:1, g:1, b:1};
-  let amt = 0.75;
-  let diff = 0.4;
   let count = 0;
+  // let amt = 0.75;
+  // let diff = 0.4;
 
+  if (!block.transparent)
   switch (side) {
     // TOP  RED
     case 0:
@@ -558,7 +603,7 @@ function calcShadow(x, y, z, side, vt) {
 function checkOffset(x, y, z, xo, yo, zo) {
   let block = getBlock(x+xo, y+yo, z+zo);
   if (block == null) return 0;
-  return !block.transparent;
+  return !block.transparent || (!block.solid && block.transparent);
 }
 
 /*
