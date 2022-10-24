@@ -17,6 +17,7 @@ var initProgram = async function() {
   data.fogDist = 10;
   data.waitTime = 0;
   data.renderedChunks = [];
+  data.dt = 0;
   settings.fog = true;
   data.superflat = false;
   seedPhrase = rnd(Math.random(), 10).toString().substring(2);
@@ -107,7 +108,13 @@ var initProgram = async function() {
 
   // Render loop
   var angle = 0;
+  var lastUpdate = Date.now();
   var loop = function() {
+
+    var now = Date.now();
+    data.dt = now - lastUpdate;
+    lastUpdate = now;
+
     // angle = performance.now() / 1000 / 6 * 2 * PI;
     drawBuffer.reset(gl);
 
@@ -115,6 +122,9 @@ var initProgram = async function() {
     player.move();
     player.use();
     
+    // drawRect(player.x, player.y+0.8, player.z, 100, 100, 100, 1, 0, 0, 0.5);
+    // drawBuffer.culling = false;
+
     updateMatricies();
     
     // Clear sky
@@ -127,9 +137,11 @@ var initProgram = async function() {
     // Generate more chunks
     generateRadius();
 
+    // gl.enable(gl.CULL_FACE);
+
     // Render all the chunks
     renderChunks();
-    
+
     // Draw each buffer
     for (let i=0; i<buffers.length; i++) {
       if (buffers[i].indices.length == 0) continue;

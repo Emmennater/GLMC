@@ -32,6 +32,7 @@ class Player {
     this.sprinting = false;
     this.gamemode = "creative";
 
+    this.pgamemode = this.gamemode;
     this.pgrounded = false;
     this.pjumped = false;
     this.hovered = null;
@@ -64,6 +65,8 @@ class Player {
     let mult = 1;
     let grounded = this.y == this.yMin;
     let jumped = false;
+
+    if (this.gamemode == "spectator") this.flying = true;
 
     if (keys.W) {
       let bonus = this.sprinting ? 1.3 : 1;
@@ -130,9 +133,9 @@ class Player {
 
     // Apply Velocity
     this.collide();
-    this.x += this.vx;
-    this.y += this.vy;
-    this.z += this.vz;
+    this.x += this.vx * (data.dt * (1 / 17));
+    this.y += this.vy * (data.dt * (1 / 17));
+    this.z += this.vz * (data.dt * (1 / 17));
     
     // Collide
     if (this.gamemode != "spectator") {
@@ -170,44 +173,46 @@ class Player {
     let pinside = this.inside;
     this.inside = false;
 
-    // If overlap stop
-    let PX = pX;
-    let PY = pY;
-    let PZ = pZ;
-    for (let x=floor(PX-this.width/2); x<ceil(PX+this.width/2); x++) {
-      for (let y=floor(PY); y<ceil(PY+this.height); y++) {
-        for (let z=floor(PZ-this.width/2); z<ceil(PZ+this.width/2); z++) {
-          block = getBlock(x, y, z);
-          // drawRect(x, y, z, 1, 1, 1, 1, 0, 0, 0.5);
-          let X = x + 0.5;
-          let Z = z + 0.5;
-          if (!block) continue;
-          let diffx = (PX - (x + 0.5));
-          let diffz = (PZ - (z + 0.5));
-          if (Math.abs(diffx) > Math.abs(diffz)) {
-            this.vx = 0;
-            if (diffx > 0) {
-              this.x = block.x + blockSize/2 + this.w/2;
+    if (this.gamemode != "spectator") {
+      // If overlap stop
+      let PX = pX;
+      let PY = pY;
+      let PZ = pZ;
+      for (let x=floor(PX-this.width/2); x<ceil(PX+this.width/2); x++) {
+        for (let y=floor(PY); y<ceil(PY+this.height); y++) {
+          for (let z=floor(PZ-this.width/2); z<ceil(PZ+this.width/2); z++) {
+            block = getBlock(x, y, z);
+            // drawRect(x, y, z, 1, 1, 1, 1, 0, 0, 0.5);
+            let X = x + 0.5;
+            let Z = z + 0.5;
+            if (!block) continue;
+            let diffx = (PX - (x + 0.5));
+            let diffz = (PZ - (z + 0.5));
+            if (Math.abs(diffx) > Math.abs(diffz)) {
+              this.vx = 0;
+              if (diffx > 0) {
+                this.x = block.x + blockSize/2 + this.w/2 + 0.001;
+              } else {
+                this.x = block.x - blockSize/2 - this.w/2 - 0.001;
+              }
             } else {
-              this.x = block.x - blockSize/2 - this.w/2;
+              this.vz = 0;
+              if (diffz > 0) {
+                this.z = block.z + blockSize/2 + this.w/2 + 0.001;
+              } else {
+                this.z = block.z - blockSize/2 - this.w/2 - 0.001;
+              }
             }
-          } else {
-            this.vz = 0;
-            if (diffz > 0) {
-              this.z = block.z + blockSize/2 + this.w/2;
-            } else {
-              this.z = block.z - blockSize/2 - this.w/2;
-            }
+
+            this.inside = true;
+
+            // let diffy = ((PY + this.height/2) - y);
+            // diffx -= diffx * Math.sign(diffx) * (this.w/2);
+            // diffz -= diffz * Math.sign(diffz) * (this.w/2);
+            // diffy -= diffy * Math.sign(diffy) * (this.h/2 + 0.5);
+            // if (boxOverlapBox(this, block)) {
+            // }
           }
-
-          this.inside = true;
-
-          // let diffy = ((PY + this.height/2) - y);
-          // diffx -= diffx * Math.sign(diffx) * (this.w/2);
-          // diffz -= diffz * Math.sign(diffz) * (this.w/2);
-          // diffy -= diffy * Math.sign(diffy) * (this.h/2 + 0.5);
-          // if (boxOverlapBox(this, block)) {
-          // }
         }
       }
     }
@@ -409,6 +414,18 @@ class Player {
     let cube = getBlock(this.hovered.x, this.hovered.y, this.hovered.z);
     if (cube == null) return;
     this.itemSelected = cube.type;
+  }
+
+  toggleGamemode() {
+    if (this.gamemode == "spectator") {
+      let aux = this.gamemode;
+      this.gamemode = this.pgamemode;
+      this.pgamemode = aux;
+    } else {
+      this.pgamemode = this.gamemode;
+      this.gamemode = "spectator";
+    }
+    console.log(this.gamemode);
   }
 
 }

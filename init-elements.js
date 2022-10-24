@@ -47,6 +47,10 @@ function initCanvasElements() {
     if (KEY == "R") {
       console.log(floor(player.x), floor(player.y), floor(player.z));
     }
+
+    if (KEY == "B") {
+      player.toggleGamemode();
+    }
     
     keys[KEY] = true;
   });
