@@ -17,6 +17,7 @@ var initProgram = async function() {
   data.fogDist = 10;
   data.waitTime = 0;
   data.renderedChunks = [];
+  data.chunkDelay = 4;
   data.dt = 0;
   settings.fog = true;
   data.superflat = false;
@@ -30,11 +31,11 @@ var initProgram = async function() {
   Chunks = {};
   LENGTH = 16;
   WIDTH = 16;
-  HEIGHT = 64;
+  HEIGHT = 128;
 
   /** PLAYER **/
   
-  player = new Player(8, 40, 8);
+  player = new Player(8, 128+10, 8);
   player.flying = false;
 
   initWebgl();
@@ -45,7 +46,7 @@ var initProgram = async function() {
   
   /** CREATE CUBES **/
   
-  pushQueue("smooth_stone", 8, 5, 8-3);
+  // pushQueue("smooth_stone", 8, 5, 8-3);
 
   // Generate chunks
   // let r = data.renderDistance / 2;

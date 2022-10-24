@@ -25,16 +25,34 @@ function Generate(cx, cz, seed) {
             } else {
 
                 // noise terrain
-                y1 = noise.simplex2(x1 / 100, z1 / 100) + 1;
-                y1 += (noise.simplex2(x1 / 50 + 10, z1 / 50 + 10) + 1) ** 2 / 2;
-                y1 += (noise.simplex2(x1 / 20 + 0.4, z1 / 20 + 1.5) + 1) / 12;
-                y1 = floor(y1 * 10);
+                // y1 = noise.simplex2(x1 / 100, z1 / 100) + 1;
+                // y1 += (noise.simplex2(x1 / 50 + 10, z1 / 50 + 10) + 1) ** 2 / 2;
+                // y1 += (noise.simplex2(x1 / 20 + 0.4, z1 / 20 + 1.5) + 1) / 12;
+                // y1 = floor(y1 * 10);
+
+                // y1 = 20;
+                // y1 += (noise.simplex2(x1/50, z1/50)+1) ** 2 * 10;
+                // y1 = floor(y1);
+
+                y1 = HEIGHT;
 
             }
 
+            let depth = 0;
             for (let y = y1; y >= 0; y--) {
+
+                let value = noise.simplex3(x1/50, z1/50, y/50) - 1;
+                value += noise.simplex3(x1/25+10, z1/25+20, y/25+30) ** 2 - 1;
+                value += (y / 20);
+                value /= 2;
+                if (value > 0.5) {
+                    depth = 0;
+                    continue;
+                }
+                
                 // Resource height map
-                let type = depthMap(y1 - y, y, x1, y1);
+                let type = depthMap(depth, y, x1, y1);
+                depth++;
 
                 // Spawning trees
                 if (data.superflat) {
@@ -42,8 +60,9 @@ function Generate(cx, cz, seed) {
                 } else {
                     if (type == "grass") {
                         let rnd = rand();
-                        if (rnd < 0.005) spawnTree(x1, y1+1, z1); else
-                        if (rnd < 0.01) spawnTree(x1, y1+1, z1, "birch_log", "birch_leaves");
+                        const FREQ = 0.01;
+                        if (rnd < FREQ/2) spawnTree(x1, y, z1); else
+                        if (rnd < 0.01) spawnTree(x1, y, z1, "birch_log", "birch_leaves");
                     }
                 }
 
@@ -63,7 +82,7 @@ function depthMap(depth, elev, x, y) {
 
     if (data.superflat) return "stone";
 
-    let stoneElev = 25 + noise.simplex2(x / 15 + 0.2, y / 15 + 0.4) * 3;
+    let stoneElev = 105 + noise.simplex2(x / 15 + 0.2, y / 15 + 0.4) * 3;
 
     // Grassy
     if (elev < stoneElev) {
@@ -76,6 +95,8 @@ function depthMap(depth, elev, x, y) {
     if (elev < 50) {
         return "stone";
     }
+
+    return "stone";
 }
 
 function spawnTree(x, y, z, log = "log", leaves = "leaves") {

@@ -56,7 +56,7 @@ class Chunk {
 }
 
 function generateChunk(x, z) {
-    const DELAY = 5;
+    const DELAY = data.chunkDelay;
 
     // Chunk already generated
     if (Chunks[x] && Chunks[x][z] && Chunks[x][z].complete) {

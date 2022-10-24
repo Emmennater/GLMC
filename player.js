@@ -165,7 +165,7 @@ class Player {
     this.xMin = pX+-20; let xMin2 = this.xMin;
     this.xMax = pX+20; let xMax2 = this.xMax;
     this.yMin = -10; let yMin2 = this.yMin;
-    this.yMax = 100; let yMax2 = this.yMax;
+    this.yMax = HEIGHT+20; let yMax2 = this.yMax;
     this.zMin = pZ+-20; let zMin2 = this.zMin;
     this.zMax = pZ+20; let zMax2 = this.zMax;
     let blockSize = 1;
