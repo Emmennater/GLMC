@@ -65,6 +65,7 @@ class Player {
     let mult = 1;
     let grounded = this.y == this.yMin;
     let jumped = false;
+    let DELTAT = (data.dt * (1 / 17));
 
     if (this.gamemode == "spectator") this.flying = true;
 
@@ -118,7 +119,7 @@ class Player {
 
     // Gravity
     if (this.y != this.yMin && !this.flying) {
-      this.vy -= this.gravity * Math.min((this.terminalVel - this.vy) / this.terminalVel, 1);
+      this.vy -= this.gravity * Math.min((this.terminalVel - this.vy) / this.terminalVel, 1) * DELTAT;
     }
 
     // Accelerate
@@ -133,9 +134,9 @@ class Player {
 
     // Apply Velocity
     this.collide();
-    this.x += this.vx * (data.dt * (1 / 17));
-    this.y += this.vy * (data.dt * (1 / 17));
-    this.z += this.vz * (data.dt * (1 / 17));
+    this.x += this.vx * DELTAT;
+    this.y += this.vy * DELTAT;
+    this.z += this.vz * DELTAT;
     
     // Collide
     if (this.gamemode != "spectator") {
