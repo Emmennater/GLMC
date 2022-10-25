@@ -24,7 +24,8 @@ var initProgram = async function() {
   seedPhrase = rnd(Math.random(), 10).toString().substring(2);
   seed = cyrb128(""+seedPhrase);
   rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
-  
+  noise.seed(seed[0]/4 + seed[1]/4 + seed[2]/4 + seed[3]/4);
+
   /** CHUNK **/
   BlockQueue = {};
   Blocks = {};
@@ -39,6 +40,7 @@ var initProgram = async function() {
   player.flying = false;
 
   initWebgl();
+  initGui();
   createTextures();
   initCanvasElements();
 
@@ -104,8 +106,12 @@ var initProgram = async function() {
   // Drawing buffer
   drawBuffer = new Buffer();
   buffers.push(drawBuffer);
+  drawBuffer.culling = false;
   
   matrices = setupMatricies();
+
+  // Draw hotbar
+  initWebgl2D();
 
   // Render loop
   var angle = 0;
@@ -128,6 +134,12 @@ var initProgram = async function() {
 
     updateMatricies();
     
+    // Gui
+    drawGui();
+
+    // Intro
+    animateIntro();
+
     // Clear sky
     gl.clearColor(sky.r, sky.g, sky.b, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -138,7 +150,7 @@ var initProgram = async function() {
     // Generate more chunks
     generateRadius();
 
-    // gl.enable(gl.CULL_FACE);
+    gl.enable(gl.CULL_FACE);
 
     // Render all the chunks
     renderChunks();

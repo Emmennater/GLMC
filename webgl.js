@@ -35,6 +35,7 @@ function initWebgl() {
   glCache.vertPos = gl.getAttribLocation(program, 'vertPosition');
   glCache.vertTex = gl.getAttribLocation(program, 'vertTexCoord');
   glCache.vertCol = gl.getAttribLocation(program, 'vertColor');
+  glCache.vertDoFog = gl.getAttribLocation(program, 'vertDoFog');
   glCache.uPos = gl.getUniformLocation(program, 'uPos');
   glCache.uDist = gl.getUniformLocation(program, 'uDist');
 
@@ -81,7 +82,7 @@ function createProgramObject(gl, vertexShaderSrc, fragmentShaderSrc) {
 }
 
 function setupVertexAttribs() {
-  var vertexSize = 9;
+  var vertexSize = 10;
   var totalSize = vertexSize * Float32Array.BYTES_PER_ELEMENT;
 
   gl.vertexAttribPointer(
@@ -113,19 +114,20 @@ function setupVertexAttribs() {
     5 * Float32Array.BYTES_PER_ELEMENT // Offset from beginning of a single vertex to this attribute
   );
 
-  // gl.vertexAttribPointer(
-  //   glCache.vertShadow, // Attribute location
-  //   1, // Number of elements per attribute
-  //   gl.FLOAT, // Type of elements
-  //   gl.FALSE,
-  //   totalSize, // Size of individual vertex
-  //   9 * Float32Array.BYTES_PER_ELEMENT // Offset from beginning of a single vertex to this attribute
-  // );
+  gl.vertexAttribPointer(
+    glCache.vertDoFog, // Attribute location
+    1, // Number of elements per attribute
+    gl.FLOAT, // Type of elements
+    gl.FALSE,
+    totalSize, // Size of individual vertex
+    9 * Float32Array.BYTES_PER_ELEMENT // Offset from beginning of a single vertex to this attribute
+  );
   
   gl.enableVertexAttribArray(glCache.vertPos);
   gl.enableVertexAttribArray(glCache.vertTex);
   gl.enableVertexAttribArray(glCache.vertCol);
   gl.enableVertexAttribArray(glCache.vertShadow);
+  gl.enableVertexAttribArray(glCache.vertDoFog);
   
 }
 

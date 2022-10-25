@@ -209,6 +209,8 @@ function getTextureArray(block) {
       return [2, 0];
     case "stone":
       return [23, 77];
+    case "bedrock":
+      return [320/16, 816/16];
     case "oak_planks":
       return [22, 77];
     case "log":
@@ -225,6 +227,28 @@ function getTextureArray(block) {
       return [13, 26];
     case "white_concrete":
       return [12, 26];
+    case "sponge":
+      return [0, 1040/16];
+    case "we_sponge":
+      return [112/16, 1040/16];
+    case "obsidian":
+      return [112/16, 1024/16];
+    case "coal_block":
+      return [4, 928/16];
+    case "diamond_block":
+      return [5, 928/16];
+    case "emerald_block":
+      return [6, 928/16];
+    case "gold_block":
+      return [7, 928/16];
+    case "iron_block":
+      return [8, 928/16];
+    case "lapis_block":
+      return [9, 928/16];
+    case "redstone_block":
+      return [10, 928/16];
+    case "nether_portal_frame":
+      return [320/16, 1];
     case "test":
       return [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0];
     default:
@@ -252,7 +276,7 @@ function getColor(block) {
 
   switch (block) {
     case "birch_leaves":
-      color = [0.9, 0.9, 0.9];
+      color = [0.8, 0.9, 0.8];
       break;
     case "leaves":
       // color = [0.7, 0.7, 0.7];
@@ -319,6 +343,12 @@ function buildBlock(buffer, block) {
   let totalVerts = 0;
   let txr = getTexture(block.type);
   let color = getColor(block.type);
+  let COL = [1, 1, 1];
+  // let COL = [
+  //   noise.simplex3(x/20+10, z/20+50, y/20+90)/2+0.5,
+  //   noise.simplex3(x/30+10, z/20+60, y/20+100)/2+0.5,
+  //   noise.simplex3(x/40+10, z/20+70, y/20+110)/2+0.5
+  // ];
 
   // Iterate over all 6 sides
   for (let side=0; side<6; side++) {
@@ -350,9 +380,10 @@ function buildBlock(buffer, block) {
         Z,
         u,
         v,
-        shade * shadow.r * color[0],
-        shade * shadow.g * color[1],
-        shade * shadow.b * color[2],
+        shade * shadow.r * color[0] * COL[0],
+        shade * shadow.g * color[1] * COL[1],
+        shade * shadow.b * color[2] * COL[2],
+        1,
         1
       );
     }
@@ -409,7 +440,7 @@ function calcShadow(block, x, y, z, side, vt) {
   // let amt = 0.75;
   // let diff = 0.4;
 
-  if (!block.transparent)
+  // if (!block.transparent)
   switch (side) {
     // TOP  RED
     case 0:
@@ -602,8 +633,10 @@ function calcShadow(block, x, y, z, side, vt) {
 
 function checkOffset(x, y, z, xo, yo, zo) {
   let block = getBlock(x+xo, y+yo, z+zo);
+  let b1 = getBlock(x, y, z);
   if (block == null) return 0;
   return !block.transparent || (!block.solid && block.transparent);
+  // return 1;
 }
 
 /*

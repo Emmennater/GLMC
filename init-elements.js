@@ -4,7 +4,7 @@ function initCanvasElements() {
   focus = false;
   moveX = 0;
   moveY = 0;
-  canvas.onclick = function() {
+  canvas2D.onclick = function() {
     mousePress();
   }
   
@@ -16,8 +16,8 @@ function initCanvasElements() {
   document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 
   function lockChangeAlert() {
-    focus = (document.pointerLockElement === canvas ||
-    document.mozPointerLockElement === canvas);
+    focus = (document.pointerLockElement === canvas2D ||
+    document.mozPointerLockElement === canvas2D);
     if (focus) {
       document.addEventListener("mousemove", canvasLoop, false);
     } else {
@@ -38,7 +38,7 @@ function initCanvasElements() {
     
     if (KEY == "SPACE" && !keys.SPACE) {
       let diff = performance.now() - data.lastSpace;
-      if (diff < 400) {
+      if (diff < 300 && !player.grounded) {
         player.flying = !player.flying;
       } 
       data.lastSpace = performance.now();
@@ -51,6 +51,22 @@ function initCanvasElements() {
     if (KEY == "B") {
       player.toggleGamemode();
     }
+
+    let index = player.hotslot;
+    // console.log(KEY);
+    switch (KEY) {
+      case "!": case "1": index = 0; break;
+      case "@": case "2": index = 1; break;
+      case "#": case "3": index = 2; break;
+      case "$": case "4": index = 3; break;
+      case "%": case "5": index = 4; break;
+      case "^": case "6": index = 5; break;
+      case "&": case "7": index = 6; break;
+      case "*": case "8": index = 7; break;
+      case "(": case "9": index = 8; break;
+    }
+    player.setHotslot(index);
+    updateHotbarSlot(index);
     
     keys[KEY] = true;
   });
@@ -62,6 +78,13 @@ function initCanvasElements() {
   });
 
   window.addEventListener("resize", function(evt){ 
+    // 2d canvas
+    canvas2D.width = window.innerWidth;
+    canvas2D.height = window.innerHeight;
+    canvas2d.width = window.innerWidth;
+    canvas2d.height = window.innerHeight;
+    resizeGui();
+
     canvasResize(canvas, gl);
     mat4.perspective(matrices.proj, player.FOV, canvas.width/canvas.height, 0.1, 1000.0);
     gl.uniformMatrix4fv(matrices.projUniform, gl.FALSE, matrices.proj);
@@ -75,6 +98,13 @@ function initCanvasElements() {
     } else if (evt.button == 2) {
       player.placeBlock();
     }
+  });
+
+  window.addEventListener('wheel', (event) => {
+    let deltaY = event.deltaY;
+    let off = Math.sign(deltaY);
+    player.hotslot = (((player.hotslot + off) % 9) + 9) % 9;
+    updateHotbarSlot();
   });
 
 }

@@ -25,7 +25,7 @@ class Player {
     this.terminalVel = 79 / 60;
     this.gravity = 0.5 / 60;
     this.jumpSpeed = 8 / 60;
-    this.xSpeed = 4.317 / 60; // 4.317 / 60;
+    this.xSpeed = 4.317 / 60;// 4.317 / 60;
     this.ySpeed = 6 / 60; // 4.317 / 60;
 
     this.flying = false;
@@ -38,6 +38,7 @@ class Player {
     this.hovered = null;
     this.hoveredSide = null;
     this.itemSelected = "smooth_stone";
+    this.hotslot = 0;
   }
   
   look() {
@@ -159,6 +160,7 @@ class Player {
     // paths with to tell if I will collide with them.
     // Compute the slope and see if its within the plane of the block.
     
+    const give = 0.1;
     let pX = this.x+0.5;
     let pY = this.y;
     let pZ = this.z+0.5;
@@ -179,30 +181,35 @@ class Player {
       let PX = pX;
       let PY = pY;
       let PZ = pZ;
+      let D = 0.001;
       for (let x=floor(PX-this.width/2); x<ceil(PX+this.width/2); x++) {
         for (let y=floor(PY); y<ceil(PY+this.height); y++) {
           for (let z=floor(PZ-this.width/2); z<ceil(PZ+this.width/2); z++) {
             block = getBlock(x, y, z);
             // drawRect(x, y, z, 1, 1, 1, 1, 0, 0, 0.5);
+            if (!block) continue;
             let X = x + 0.5;
             let Z = z + 0.5;
-            if (!block) continue;
-            let diffx = (PX - (x + 0.5));
-            let diffz = (PZ - (z + 0.5));
+            let diffx = (PX - X);
+            let diffz = (PZ - Z);
             if (Math.abs(diffx) > Math.abs(diffz)) {
               this.vx = 0;
+              let tox = this.x;
               if (diffx > 0) {
-                this.x = block.x + blockSize/2 + this.w/2 + 0.001;
+                tox = blockSize/2 + this.w/2 + 0.001;
               } else {
-                this.x = block.x - blockSize/2 - this.w/2 - 0.001;
+                tox = -blockSize/2 - this.w/2 - 0.001;
               }
+              this.x += tox * give;
             } else {
               this.vz = 0;
+              let toz = this.z;
               if (diffz > 0) {
-                this.z = block.z + blockSize/2 + this.w/2 + 0.001;
+                toz = blockSize/2 + this.w/2 + 0.001;
               } else {
-                this.z = block.z - blockSize/2 - this.w/2 - 0.001;
+                toz = -blockSize/2 - this.w/2 - 0.001;
               }
+              this.z += toz * give;
             }
 
             this.inside = true;
@@ -245,7 +252,7 @@ class Player {
           block = getBlock(x, y, z);
           if (!block) continue;
           if (block.type != "air") {
-            newMax = block.x - blockSize/2 - this.width / 2;
+            newMax = block.x - blockSize/2 - this.width / 2 - 0.001;
             if (newMax < xMax2) {
               xMax2 = newMax;
             }
@@ -265,7 +272,7 @@ class Player {
           block = getBlock(x, y, z);
           if (!block) continue;
           if (block.type != "air") {
-            newMin = block.z + blockSize/2 + this.width / 2;
+            newMin = block.z + blockSize/2 + this.width / 2 + 0.001;
             if (newMin > zMin2) {
               zMin2 = newMin;
             }
@@ -284,7 +291,7 @@ class Player {
           block = getBlock(x, y, z);
           if (!block) continue;
           if (block.type != "air") {
-            newMax = block.z - blockSize/2 - this.width / 2;
+            newMax = block.z - blockSize/2 - this.width / 2 - 0.001;
             if (newMax < zMax2) {
               zMax2 = newMax;
             }
@@ -322,7 +329,7 @@ class Player {
           block = getBlock(x, y, z);
           if (!block) continue;
           if (block.type != "air") {
-            newMax = block.y - this.height;
+            newMax = block.y - this.height - 0.001;
             if (newMax < yMax2) {
               yMax2 = newMax;
             }
@@ -340,14 +347,15 @@ class Player {
     this.yMax = yMax2;
     this.zMax = zMax2;
 
-
-    // MARKER.x = (this.xMax + this.xMin) / 2;
-    // MARKER.y = (this.yMax + this.yMin) / 2;
-    // MARKER.z = (this.zMax + this.zMin) / 2;
-    // MARKER.l = this.xMax - this.xMin;
-    // MARKER.w = this.zMax - this.zMin;
-    // MARKER.h = this.yMax - this.yMin;
+    let MARKER = {};
+    MARKER.x = (this.xMax + this.xMin) / 2;
+    MARKER.y = (this.yMax + this.yMin) / 2;
+    MARKER.z = (this.zMax + this.zMin) / 2;
+    MARKER.l = this.xMax - this.xMin;
+    MARKER.w = this.zMax - this.zMin;
+    MARKER.h = this.yMax - this.yMin;
     // MARKER.rebuild();
+    // drawRect(MARKER.x,MARKER.y,MARKER.z,MARKER.l,MARKER.h,MARKER.w,1,1,1,0.3);
 
     return result;
   }
@@ -391,11 +399,11 @@ class Player {
       if (block != null) {
         if (block.type != "air") {
           drawRect(x, y, z, 1.001, 1.001, 1.001, 0, 0, 0, 0.1);
-          this.hovered = {x:x, y:y, z:z};
+          this.hovered = {x:x, y:y, z:z, block:block};
           break;
         }
       }
-      this.hoveredSide = {x:x, y:y, z:z};
+      this.hoveredSide = {x:x, y:y, z:z, block:block};
     }
   }
 
@@ -407,6 +415,20 @@ class Player {
 
   placeBlock() {
     if (!this.hoveredSide || !this.hovered) return;
+
+    // let placing = createBlock(this.itemSelected);
+
+    if (boxOverlapBoxValues(
+      this.x, this.y + this.h/2 - 0.5, this.z,
+      this.l, this.h - 0.001, this.w,
+      this.hoveredSide.x,
+      this.hoveredSide.y,
+      this.hoveredSide.z,
+      1,
+      1,
+      1
+    )) return;
+
     editBlock(this.hoveredSide.x, this.hoveredSide.y, this.hoveredSide.z, this.itemSelected, true);
   }
 
@@ -427,6 +449,10 @@ class Player {
       this.gamemode = "spectator";
     }
     console.log(this.gamemode);
+  }
+
+  setHotslot(n) {
+    this.hotslot = n;
   }
 
 }

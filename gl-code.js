@@ -29,13 +29,13 @@ var vertexShaderSrc = `
 attribute vec3 vertPosition;
 attribute vec2 vertTexCoord;
 attribute vec4 vertColor;
-attribute float vertShadow;
+attribute float vertDoFog;
 
 // Output variables
 varying vec2 fragTexCoord;
 varying vec3 fragPosition;
 varying vec4 fragColor;
-varying float fragShadow;
+varying float fragDoFog;
 varying float fragFog;
 
 // Global variables
@@ -49,12 +49,12 @@ void main() {
   fragTexCoord = vertTexCoord;
   fragPosition = vertPosition;
   fragColor = vertColor;
-  fragShadow = vertShadow;
+  fragDoFog = vertDoFog;
   gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);
   
   // Calculate fog (credit: minekhan)
   float range = max(uDist / 5.0, 8.0);
-  fragFog = clamp((length(uPos.xz - vertPosition.xz) - uDist + range) / range, 0.0, 1.0);
+  fragFog = vertDoFog * clamp((length(uPos.xz - vertPosition.xz) - uDist + range) / range, 0.0, 1.0);
 }
 
 `;
@@ -81,9 +81,13 @@ vec4 fog(vec4 color) {
 
 void main() {
   // vec4 vecFog = vec4(1, 1, 1, 1.0 - fragFog);
+  vec4 color = texture2D(sampler, fragTexCoord);
+  bool grass = !( color.g > color.r && color.g - color.b > 0.1 );
 
-  gl_FragColor = fog(texture2D(sampler, fragTexCoord) * fragColor);
-  if (gl_FragColor.a == 0.0) discard;
+  color = fog(color * fragColor); //  * vec4(1, grass, grass, 1)
+  if (color.a == 0.0) discard;
+
+  gl_FragColor = color;
 }
 
 `;

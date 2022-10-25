@@ -41,13 +41,12 @@ function Generate(cx, cz, seed) {
             let depth = 0;
             for (let y = y1; y >= 0; y--) {
 
-                let value = noise.simplex3(x1/50, z1/50, y/50) - 1;
-                value += noise.simplex3(x1/25+10, z1/25+20, y/25+30) ** 2 - 1;
-                value += (y / 20);
-                value /= 2;
-                if (value > 0.5) {
-                    depth = 0;
-                    continue;
+                if (!data.superflat) {
+                    let result = ChaosHills.generate(x1, y, z1);
+                    if (!result) {
+                        depth = 0;
+                        continue;
+                    }
                 }
                 
                 // Resource height map
@@ -80,8 +79,17 @@ function Generate(cx, cz, seed) {
 
 function depthMap(depth, elev, x, y) {
 
-    if (data.superflat) return "stone";
+    if (elev < 4) {
+        switch (elev) {
+            case 0: return "bedrock";
+            case 1: if (rand() < 0.75) return "bedrock";
+            case 2: if (rand() < 0.5) return "bedrock";
+            case 3: if (rand() < 0.25) return "bedrock";
+        }
+    }
 
+    
+    // if (data.superflat) return "stone";
     let stoneElev = 105 + noise.simplex2(x / 15 + 0.2, y / 15 + 0.4) * 3;
 
     // Grassy
@@ -151,4 +159,24 @@ function pushQueue(type, x, y, z, replace = []) {
         z: z,
         replace: replace
     });
+}
+
+function biomeBlendGen(heat, moisture, ...Algorithms) {
+
+}
+
+class Biome {
+    static generate(x, y, z) {
+        return true;
+    }
+}
+
+class ChaosHills extends Biome {
+    static generate(x, y, z) {
+        let value = noise.simplex3(x/50, z/50, y/50) - 1;
+        value += noise.simplex3(x/25+10, z/25+20, y/25+30) ** 2 - 1;
+        value += (y / 20);
+        value /= 2;
+        return (value <= 0.5);
+    }
 }

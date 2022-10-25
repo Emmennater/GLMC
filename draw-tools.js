@@ -11,7 +11,7 @@ class Rect {
         this.vertices = [];
         this.indices = [];
         this.buffer = null;
-        this.txr = getTexture("glass");
+        this.txr = [368/16, 144/16, 368/16, 144/16, 368/16, 144/16, 368/16, 144/16, 368/16, 144/16, 368/16, 144/16]; // getTexture("glass");
     }
 
     setColor(r, g, b, a=1) {
@@ -64,7 +64,8 @@ class Rect {
                     this.col.r,
                     this.col.g,
                     this.col.b,
-                    this.col.a
+                    this.col.a,
+                    0
                 );
             }
     

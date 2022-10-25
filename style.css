@@ -16,6 +16,17 @@ img {
   position: fixed;
   z-index: 1;
   width: 1%;
+
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+
+}
+
+#gui {
+  image-rendering: pixelated;
 }
 
 .center {

@@ -6,9 +6,11 @@
 
   </head>
   <body>
-    <canvas id="mycanvas" width="600" height="500">
+    <canvas id="mycanvas" width="600" height="500" style="z-index: 1">
       HTML5 Canvas is not supported
     </canvas>
+    <canvas id="web2d" width="600" height="500" style="z-index: 2"></canvas>
+    <canvas id="gui" width="600" height="500" style="z-index: 3"></canvas>
     <img src="assets/crosshair.png" class="center"></img>
     <main>
     </main>
@@ -20,6 +22,7 @@
 
     <script src="helper.js"></script>
     <script src="actions.js"></script>
+    <script src="gui.js"></script>
     <script src="create-cube.js"></script>
     <script src="generate.js"></script>
     <script src="chunk.js"></script>
@@ -28,6 +31,7 @@
     <script src="player.js"></script>
     <script src="gl-code.js"></script>
     <script src="webgl.js"></script>
+    <script src="webgl2d.js"></script>
     <script src="init-elements.js"></script>
     <script src="sketch.js"></script>
     

@@ -104,10 +104,21 @@ function boxOverlapBox(a, b) {
     return (
         a.x + a.l / 2 > b.x - b.l / 2 &&
         a.x - a.l / 2 < b.x + b.l / 2 &&
-        a.z + a.w / 2 > b.x - b.w / 2 &&
-        a.z - a.w / 2 < b.x + b.w / 2 &&
-        a.y + a.h / 2 > b.x - b.h / 2 &&
-        a.y - a.h / 2 < b.x + b.h / 2
+        a.z + a.w / 2 > b.z - b.w / 2 &&
+        a.z - a.w / 2 < b.z + b.w / 2 &&
+        a.y + a.h / 2 > b.y - b.h / 2 &&
+        a.y - a.h / 2 < b.y + b.h / 2
+    );
+}
+
+function boxOverlapBoxValues(ax, ay, az, al, ah, aw, bx, by, bz, bl, bh, bw) {
+    return (
+        ax + al / 2 > bx - bl / 2 &&
+        ax - al / 2 < bx + bl / 2 &&
+        az + aw / 2 > bz - bw / 2 &&
+        az - aw / 2 < bz + bw / 2 &&
+        ay + ah / 2 > by - bh / 2 &&
+        ay - ah / 2 < by + bh / 2
     );
 }
 
@@ -217,6 +228,10 @@ function dist2(x1, y1, x2, y2) {
         (x2 - x1) ** 2 +
         (y2 - y1) ** 2
     );
+}
+
+function map(x, a1, a2, b1, b2) {
+    return ((x - a1) / a2) * b2 + b1;
 }
 
 /*
