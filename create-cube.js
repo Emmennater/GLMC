@@ -321,24 +321,41 @@ function isSolid(block) {
   }
 }
 
-function buildBlock(buffer, block) {
+function buildBlock(buffer, block, overwrite = false) {
   if (!block) return;
+  
+  let vertices = buffer.vertices;
+  let indices = buffer.indices;
+  const TOTAL_SIDES = indices.length / 6;
+  const TOTAL_VERTS = TOTAL_SIDES * 4;
+
+  // Use previous calculations
+  if (!overwrite) {
+    for (let i=0; i<block.data.vertices.length; i++)
+      vertices.push(block.data.vertices[i]);
+    for (let i in block.data.indices)
+      indices.push(block.data.indices[i] + TOTAL_VERTS);
+    return;
+  }
+
+  data.blocksUpdated++;
+
+  // Reset data
+  block.data = {};
+  block.data.vertices = [];
+  block.data.indices = [];
 
   let x = block.x;
   let y = block.y;
   let z = block.z;
 
   // if (transparentEx == this.transparent) return;
-  let vertices = buffer.vertices;
-  let indices = buffer.indices;
 
   const skipSides = removeFaces(block, x, y, z);
   const TEXTURE_WIDTH = 384; //256;
   const TEXTURE_HEIGHT = 1520; //944;
   const TXRW = TEXTURE_WIDTH / 16;
   const TXRH = TEXTURE_HEIGHT / 16;
-  const TOTAL_SIDES = indices.length / 6;
-  const TOTAL_VERTS = TOTAL_SIDES * 4;
   const L = 1, W = 1, H = 1;
   let totalVerts = 0;
   let txr = getTexture(block.type);
@@ -373,8 +390,8 @@ function buildBlock(buffer, block) {
 
       let shadow = calcShadow(block, x, y, z, side, j);
 
-      // Push vertices
-      vertices.push(
+      // Update block vertices
+      block.data.vertices.push(
         X,
         Y,
         Z,
@@ -391,12 +408,22 @@ function buildBlock(buffer, block) {
     // Iterate over indices
     for (let j=side*6; j<side*6+6; j++) {
       let idx = CUBE_INDICES[j] - side * 4;
+
+      // Update block indices
+      block.data.indices.push(totalVerts + idx);
+
+      // Push indices
       indices.push(TOTAL_VERTS + totalVerts + idx);
       // cubeIndices.push(TOTAL_VERTS + CUBE_INDICES[j]);
     }
 
     totalVerts += 4; // next face is 4 vertices away
   }
+
+  // Push vertices
+  for (let i=0; i<block.data.vertices.length; i++)
+    vertices.push(block.data.vertices[i]);
+
 }
 
 function removeFaces(b, x, y, z) {

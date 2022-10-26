@@ -135,16 +135,15 @@ function editBlock(x, y, z, type, update = false) {
     Chunks[cx][cz].setBlock(bx, by, bz, block, update);
     
     // Test surrounding blocks for chunk boarders
-    for (let i=0; i<4; i++) {
-      let bx = x, bz = z;
-      
-      switch (i) {
-        case 0: bx += 1; break;
-        case 1: bx += -1; break;
-        case 2: bz += 1; break;
-        case 3: bz += -1; break;
-      }
-      
+    let chunks = [];
+    for (let xo=-1; xo<=1; xo++) {
+    for (let yo=-1; yo<=1; yo++) {
+    for (let zo=-1; zo<=1; zo++) {
+      if (xo == 0 && yo == 0 && zo == 0) continue;
+      bx = x + xo;
+      by = y + yo;
+      bz = z + zo;
+
       // Get blocks chunk
       let cx2 = floor(bx/LENGTH);
       let cz2 = floor(bz/WIDTH);
@@ -152,10 +151,32 @@ function editBlock(x, y, z, type, update = false) {
       // If the block is not in the same chunk update that chunk.
       if (cx != cx2 || cz != cz2) {
         let chunk2 = getChunk(bx, bz);
-        if (chunk2) chunk2.calcVertices();
+        let coord = getChunkCoord(bx, by, bz);
+        chunk2.updateBlock(coord.x, coord.y, coord.z);
+        chunks.push(chunk2);
       }
-    }
+    }}}
 
+    for (let i in chunks) {
+        if (chunks[i].accounted) continue;
+        chunks[i].accounted = true;
+        chunks[i].calcVertices(false);
+    }
+    for (let i in chunks)
+        chunks[i].accounted = false;
+
+}
+
+function calcNearby(x, y, z) {
+    for (let xo=-1; xo<=1; xo++) {
+    for (let yo=-1; yo<=1; yo++) {
+    for (let zo=-1; zo<=1; zo++) {
+        if (xo == 0 && yo == 0 && zo == 0) continue;
+        let block = getBlock(x+xo, y+yo, z+zo);
+        let chunk = getChunk(x+xo, z+zo);
+        if (!block) continue;
+        buildBlock(chunk.buffer, block, true);
+    }}}
 }
 
 function calculateFog(gl, buffer) {
@@ -181,7 +202,6 @@ function renderFog(gl) {
 }
 
 function setBlock(x, y, z, type = null) {
-    // Get chunk coordinate
     
 }
 
@@ -193,6 +213,19 @@ function getChunk(x, z) {
     if (Chunks[cx][cz] == undefined) return null;
 
     return Chunks[cx][cz];
+}
+
+function getChunkCoord(x, y, z) {
+    let cx = floor(x/LENGTH);
+    let cz = floor(z/WIDTH);
+    let bx = x - cx * LENGTH;
+    let by = y;
+    let bz = z - cz * WIDTH;
+    return {
+        x: bx,
+        y: by,
+        z: bz
+    };
 }
 
 function getBlock(x, y, z) {

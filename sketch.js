@@ -121,6 +121,8 @@ var initProgram = async function() {
     var now = Date.now();
     data.dt = now - lastUpdate;
     lastUpdate = now;
+    data.blocksUpdated = 0;
+    data.updates = 0;
 
     // angle = performance.now() / 1000 / 6 * 2 * PI;
     drawBuffer.reset(gl);
