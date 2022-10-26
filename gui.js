@@ -50,9 +50,10 @@ function drawGui() {
 
     gui.save();
 
-    gui.translate(W*0.8, H+sizeY/4);
-    gui.rotate(-player.swing / 1.5);
-    GuiElements.hand.draw(0, -sizeY/2, sizeX, sizeY * 1.2 * (1 + player.swing * 1.5));
+    let A = player.swing;
+    gui.translate(W*0.8, H + A * sizeY);
+    gui.rotate(-A * 2);
+    GuiElements.hand.draw(-A * sizeX, -sizeY/2, sizeX * 1.2, sizeY * 1.2 * (1 + A * 1.5));
 
 
     gui.restore();

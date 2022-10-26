@@ -21,7 +21,7 @@ function Generate(cx, cz, seed) {
             let z1 = z + czoff;
 
             if (data.superflat) {
-                y1 = 40;
+                y1 = 5;
             } else {
 
                 // noise terrain
