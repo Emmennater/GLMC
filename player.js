@@ -447,6 +447,7 @@ class Player {
       1
     )) return;
 
+    this.hit();
     editBlock(this.hoveredSide.x, this.hoveredSide.y, this.hoveredSide.z, this.itemSelected, true);
   }
 
