@@ -18,6 +18,7 @@ var initProgram = async function() {
   data.waitTime = 0;
   data.renderedChunks = [];
   data.chunkDelay = 4;
+  data.chunksGenerated = 0;
   data.dt = 0;
   settings.fog = true;
   data.superflat = false;

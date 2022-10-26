@@ -74,6 +74,8 @@ function Generate(cx, cz, seed) {
         }
     }
 
+    data.chunksGenerated++;
+
     return blocks;
 }
 
