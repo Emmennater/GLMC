@@ -418,7 +418,7 @@ class Player {
   }
 
   animate() {
-    this.swing += Math.sign(this.hitAnimation) * 0.08;
+    this.swing += Math.sign(this.hitAnimation) * 0.08 * (DELTAT / 16);
     if (this.swing >= 0.5) this.hitAnimation = -1;
     this.swing = constrain(this.swing, 0, 1);
   }
