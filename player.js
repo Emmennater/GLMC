@@ -39,6 +39,10 @@ class Player {
     this.hoveredSide = null;
     this.itemSelected = "smooth_stone";
     this.hotslot = 0;
+
+    // Animations
+    this.swing = 0.0;
+    this.hitAnimation = 0;
   }
   
   look() {
@@ -60,6 +64,7 @@ class Player {
   }
 
   move() {
+
     let movex = 0;
     let movey = 0;
     let movez = 0;
@@ -152,6 +157,7 @@ class Player {
     this.pgrounded = grounded;
     this.pjumped = jumped;
     
+    this.animate();
   }
 
   collide() {
@@ -407,7 +413,19 @@ class Player {
     }
   }
 
+  hit() {
+    this.hitAnimation = 1.1;
+  }
+
+  animate() {
+    this.swing += Math.sign(this.hitAnimation) * 0.08;
+    if (this.swing >= 0.5) this.hitAnimation = -1;
+    this.swing = constrain(this.swing, 0, 1);
+  }
+
   breakBlock() {
+    this.hit();
+
     if (!this.hovered) return;
 
     editBlock(this.hovered.x, this.hovered.y, this.hovered.z, null, true);

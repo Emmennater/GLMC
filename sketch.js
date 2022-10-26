@@ -10,6 +10,7 @@ var initProgram = async function() {
   await sleep(100);
   
   /** DATA **/
+  TOPCANVAS = null;
   data = {};
   settings = {};
   data.renderDistance = 8;
@@ -33,13 +34,15 @@ var initProgram = async function() {
   Chunks = {};
   LENGTH = 16;
   WIDTH = 16;
-  HEIGHT = 128;
+  HEIGHT = 256;
 
   /** PLAYER **/
   
   player = new Player(8, 128+10, 8);
   player.flying = false;
 
+  // Draw hotbar
+  initWebgl2D();
   initWebgl();
   initGui();
   createTextures();
@@ -110,9 +113,6 @@ var initProgram = async function() {
   drawBuffer.culling = false;
   
   matrices = setupMatricies();
-
-  // Draw hotbar
-  initWebgl2D();
 
   // Render loop
   var angle = 0;

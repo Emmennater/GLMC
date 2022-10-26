@@ -28,10 +28,10 @@ function getMousePos(canvas, evt) {
 }
 
 window.addEventListener("mousemove", e => {
-  try { if (canvas2D == undefined) return; } catch (E) { return; }
+  try { if (TOPCANVAS == undefined) return; } catch (E) { return; }
   pmouse = {x: 0, y: 0};
   if (mouse) pmouse = {x: mouse.x, y: mouse.y};
-  mouse = getMousePos(canvas2D, e);
+  mouse = getMousePos(TOPCANVAS, e);
   mouse.px = pmouse.x;
   mouse.py = pmouse.y;
   mouse.movedX = (mouse.x - mouse.px);

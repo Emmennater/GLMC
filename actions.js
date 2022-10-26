@@ -8,7 +8,7 @@ function mousePress() {
     return;
   }
   
-  canvas2D.requestPointerLock();
+  TOPCANVAS.requestPointerLock();
   pointerLockActivatedAt = performance.now();
 }
 

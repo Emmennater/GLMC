@@ -9,7 +9,7 @@ function initGui() {
     setpixelated(gui);
 
     gui.fillRect(0, 0, window.innerWidth, window.innerHeight);
-    GuiElements.hotbar = new DirImage("assets/hotbar.png");
+    GuiElements.hand = new DirImage("assets/stevehand.webp");
     // pattern = '#FFFFFF';
     // titleScreenImg = new DirImage("https://cdn.mos.cms.futurecdn.net/52K7sgnQLSJ8ggfyfvz9yB-1200-80.jpg",
     //     ()=>{pattern = gui.createPattern(titleScreenImg.img, "no-repeat");}
@@ -17,7 +17,8 @@ function initGui() {
 
     Components = [];
     Components.push(new GuiComponenet(gui, ()=>"XYZ: "+floor(player.x)+" "+floor(player.y)+" "+floor(player.z)));
-    Components.push(new GuiComponenet(gui, ()=>"Chunks: "+data.chunksGenerated));
+    Components.push(new GuiComponenet(gui, ()=>"chunks: "+data.chunksGenerated));
+    Components.push(new GuiComponenet(gui, ()=>"seed: "+seedPhrase));
 }
 
 function animateIntro() {
@@ -43,11 +44,18 @@ function drawGui() {
         Components[i].draw(i);
     }
 
-    // Hotbar
-    // let sizeX = W * 3/9;
-    // let sizeY = GuiElements.hotbar.getHeightWith(sizeX);
-    // GuiElements.hotbar.draw(W/2, H-sizeY/2, sizeX, sizeY);
+    // Hand
+    let sizeX = 1400 * 3/14;
+    let sizeY = GuiElements.hand.getHeightWith(sizeX);
 
+    gui.save();
+
+    gui.translate(W*0.8, H+sizeY/4);
+    gui.rotate(-player.swing / 1.5);
+    GuiElements.hand.draw(0, -sizeY/2, sizeX, sizeY * 1.2 * (1 + player.swing * 1.5));
+
+
+    gui.restore();
 }
 
 class GuiComponenet {

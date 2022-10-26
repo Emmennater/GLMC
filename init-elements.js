@@ -4,7 +4,7 @@ function initCanvasElements() {
   focus = false;
   moveX = 0;
   moveY = 0;
-  canvas2D.onclick = function() {
+  TOPCANVAS.onclick = function() {
     mousePress();
   }
   
@@ -16,8 +16,8 @@ function initCanvasElements() {
   document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 
   function lockChangeAlert() {
-    focus = (document.pointerLockElement === canvas2D ||
-    document.mozPointerLockElement === canvas2D);
+    focus = (document.pointerLockElement === TOPCANVAS ||
+    document.mozPointerLockElement === TOPCANVAS);
     if (focus) {
       document.addEventListener("mousemove", canvasLoop, false);
     } else {

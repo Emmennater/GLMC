@@ -5,6 +5,7 @@ function initWebgl2D() {
     // Initializing webgl
     canvas2d = document.getElementById('web2d');
     gl2d = canvas2d.getContext('webgl');
+    TOPCANVAS = canvas2d;
     
     if (!gl2d) {
       console.log('webgl not supported, falling back on experimental');
