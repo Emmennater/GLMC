@@ -330,20 +330,20 @@ function buildBlock(buffer, block, overwrite = false) {
   const TOTAL_VERTS = TOTAL_SIDES * 4;
 
   // Use previous calculations
-  if (!overwrite) {
-    for (let i=0; i<block.data.vertices.length; i++)
-      vertices.push(block.data.vertices[i]);
-    for (let i in block.data.indices)
-      indices.push(block.data.indices[i] + TOTAL_VERTS);
+  if (!overwrite && block.concealed == true) {
+    // for (let i=0; i<block.data.vertices.length; i++)
+    //   vertices.push(block.data.vertices[i]);
+    // for (let i in block.data.indices)
+    //   indices.push(block.data.indices[i] + TOTAL_VERTS);
     return;
   }
 
   data.blocksUpdated++;
 
   // Reset data
-  block.data = {};
-  block.data.vertices = [];
-  block.data.indices = [];
+  // block.data = {};
+  // block.data.vertices = [];
+  // block.data.indices = [];
 
   let x = block.x;
   let y = block.y;
@@ -352,6 +352,16 @@ function buildBlock(buffer, block, overwrite = false) {
   // if (transparentEx == this.transparent) return;
 
   const skipSides = removeFaces(block, x, y, z);
+  let all = true;
+  for (let i in skipSides) if (!skipSides[i]) {
+    all = false; break;
+  }
+  if (all) {
+    block.concealed = true;
+    return;
+  }
+
+  block.concealed = false;
   const TEXTURE_WIDTH = 384; //256;
   const TEXTURE_HEIGHT = 1520; //944;
   const TXRW = TEXTURE_WIDTH / 16;
@@ -391,7 +401,7 @@ function buildBlock(buffer, block, overwrite = false) {
       let shadow = calcShadow(block, x, y, z, side, j);
 
       // Update block vertices
-      block.data.vertices.push(
+      vertices.push(
         X,
         Y,
         Z,
@@ -410,7 +420,7 @@ function buildBlock(buffer, block, overwrite = false) {
       let idx = CUBE_INDICES[j] - side * 4;
 
       // Update block indices
-      block.data.indices.push(totalVerts + idx);
+      // block.data.indices.push(totalVerts + idx);
 
       // Push indices
       indices.push(TOTAL_VERTS + totalVerts + idx);
@@ -421,8 +431,8 @@ function buildBlock(buffer, block, overwrite = false) {
   }
 
   // Push vertices
-  for (let i=0; i<block.data.vertices.length; i++)
-    vertices.push(block.data.vertices[i]);
+  // for (let i=0; i<block.data.vertices.length; i++)
+  //   vertices.push(block.data.vertices[i]);
 
 }
 
