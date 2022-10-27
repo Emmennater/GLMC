@@ -1,22 +1,32 @@
-function Generate(cx, cz, seed) {
-    let blocks = [];
+function Generate(cx, cz, bx = 0, bz = 0, blocks = null) {
     let cxoff = cx * LENGTH;
     let czoff = cz * WIDTH;
 
-    noise.seed(seed);
+    if (blocks == null) {
+        blocks = [];
 
-    // Prep Blocks
-    for (let x = 0; x < LENGTH; x++) {
-        blocks[x] = [];
-        for (let z = 0; z < WIDTH; z++) {
-            blocks[x][z] = [];
+        // Prep Blocks
+        for (let x = 0; x < LENGTH; x++) {
+            blocks[x] = [];
+            for (let z = 0; z < WIDTH; z++) {
+                blocks[x][z] = [];
+            }
         }
     }
 
     // Generate terrain
     let y1 = 0;
-    for (let x = 0; x < LENGTH; x++) {
-        for (let z = 0; z < WIDTH; z++) {
+    for (let x = bx; x < LENGTH; x++) {
+        for (let z = bz; z < WIDTH; z++) {
+            bz = 0;
+
+            // Lazy chunks
+            if (TotalBlockGen > MaxBlockGen) {
+                TotalBlockGen = 0;
+                LazyChunk = {cx:cx, cz:cz, x:x, z:z, blocks:blocks};
+                return;
+            }
+
             let x1 = x + cxoff;
             let z1 = z + czoff;
 
@@ -70,12 +80,14 @@ function Generate(cx, cz, seed) {
                 blocks[x][z][y].X = x;
                 blocks[x][z][y].Y = y;
                 blocks[x][z][y].Z = z;
+                TotalBlockGen++;
             }
         }
     }
 
     data.chunksGenerated++;
 
+    LazyChunk = null;
     return blocks;
 }
 

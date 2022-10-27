@@ -414,14 +414,22 @@ class Player {
   }
 
   hit() {
+    if (this.swing < 0.7 && this.swing > 0) return;
     this.hitAnimation = 1.1;
+    if (this.swing > 0.3)
+    this.swing = 0.3;
   }
 
   animate() {
     let DELTAT = (data.dt * (1 / 16));
     this.swing += Math.sign(this.hitAnimation) * 0.08 * DELTAT;
-    if (this.swing >= 0.5) this.hitAnimation = -1;
-    this.swing = constrain(this.swing, 0, 1);
+    if (this.swing >= 1) {
+      this.swing = 0;
+      this.hitAnimation = 0;
+    }
+    
+    // if (this.swing >= 0.5) this.hitAnimation = -1;
+    // this.swing = constrain(this.swing, 0, 1);
   }
 
   breakBlock() {

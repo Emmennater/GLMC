@@ -51,9 +51,28 @@ function drawGui() {
     gui.save();
 
     let A = player.swing;
-    gui.translate(W*0.8, H + A * sizeY);
-    gui.rotate(-A * 2);
-    GuiElements.hand.draw(-A * sizeX, -sizeY/2, sizeX * 1.2, sizeY * 1.2 * (1 + A * 1.5));
+    let B = 0.5 - Math.abs(A - 0.5);
+    gui.translate(W*0.72, H+B*sizeY/2);
+    gui.rotate(-B);
+
+    let xoff = Math.cos(-A*Math.PI*2) * sizeX / 2;
+    let yoff = Math.sin(-A*Math.PI*2) * sizeY / 3 + B * sizeY;
+    let hmult = 1.2 * (1 + B * 2);
+
+    if (settings.hand == "right" || settings.hand == "both")
+        GuiElements.hand.draw(xoff, yoff-sizeY/2, sizeX * 1.2, sizeY * hmult);
+
+    gui.restore();
+    gui.save();
+
+    gui.translate(W/2-W*0.22, H+B*sizeY/2);
+    gui.rotate(B);
+    gui.scale(-1, 1);
+
+    if (settings.hand == "left" || settings.hand == "both")
+        GuiElements.hand.draw(xoff, yoff-sizeY/2, sizeX * 1.2, sizeY * hmult);
+
+    // GuiElements.hand.draw(-A * sizeX, -sizeY/2, sizeX * 1.2, sizeY * 1.2 * (1 + A * 1.5));
 
 
     gui.restore();

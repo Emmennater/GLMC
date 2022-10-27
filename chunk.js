@@ -8,6 +8,7 @@ class Chunk {
         this.buffer = new Buffer();
         this.blocks = [];
         this.complete = false;
+        this.calculating = false;
     }
 
     getBlock(x, y, z) {
@@ -39,13 +40,15 @@ class Chunk {
         data.renderedChunks++;
     }
 
-    calcVertices(overwrite = true) {
+    async calcVertices(overwrite = true) {
+        this.calculating = true;
         this.buffer.vertices = [];
         this.buffer.indices = [];
 
         // Generate indices and vertices
         // and add them to the buffer
         for (let x = 0; x < LENGTH; x++) {
+            if (overwrite) await sleep(VertexWaitTime);
             for (let z = 0; z < WIDTH; z++) {
                 for (let y = 0; y < HEIGHT; y++) {
                     buildBlock(this.buffer, this.blocks[x][z][y], overwrite);
@@ -68,8 +71,21 @@ class Chunk {
 function generateChunk(x, z) {
     const DELAY = data.chunkDelay;
 
+    // Resume loading chunks
+    if (LazyChunk != null) {
+        let cx = LazyChunk.cx;
+        let cz = LazyChunk.cz;
+        let blocks = Generate(cx, cz, LazyChunk.x, LazyChunk.z, LazyChunk.blocks);
+        if (LazyChunk == null) {
+            let chunk = new Chunk(cx, cz);
+            chunk.blocks = blocks;
+            Chunks[cx][cz] = chunk;
+        }
+        return DELAY;
+    }
+
     // Chunk already generated
-    if (Chunks[x] && Chunks[x][z] && Chunks[x][z].complete) {
+    if (Chunks[x] && Chunks[x][z] && (Chunks[x][z].complete || Chunks[x][z].calculating)) {
         data.chunkBusy = false;
         return 0;
     }
@@ -88,12 +104,12 @@ function generateChunk(x, z) {
             Chunks[cx] = {};
         }
         if (Chunks[cx][cz] == undefined) {
-            let chunk = new Chunk(cx, cz);
-            chunk.blocks = Generate(cx, cz, seed);
-            Chunks[cx][cz] = chunk;
-
-            data.chunkBusy = false;
-            data.chunkTime = DELAY;
+            let blocks = Generate(cx, cz);
+            if (LazyChunk == null) {
+                let chunk = new Chunk(cx, cz);
+                chunk.blocks = blocks;
+                Chunks[cx][cz] = chunk;
+            } else { return DELAY; }
             
             return DELAY; // 10 delay
         }
@@ -102,9 +118,12 @@ function generateChunk(x, z) {
     // Build Chunk if not done so already
     if (Chunks[x] == undefined) Chunks[x] = {};
     if (Chunks[x][z] == undefined) {
-        let chunk = new Chunk(x, z);
-        chunk.blocks = Generate(x, z, seed);
-        Chunks[x][z] = chunk;
+        let blocks = Generate(x, z);
+        if (LazyChunk == null) {
+            let chunk = new Chunk(cx, cz);
+            chunk.blocks = blocks;
+            Chunks[cx][cz] = chunk;
+        } else { return DELAY; }
     }
 
     // Loop through queued blocks to see if
@@ -137,7 +156,7 @@ function generateChunk(x, z) {
     Chunks[x][z].calcVertices();
 
     data.chunkBusy = false;
-    data.chunkTime = DELAY;
+
     return DELAY;
 }
 
@@ -147,7 +166,7 @@ function generateRadius() {
         return;
     }
 
-    if (data.chunkBusy) return;
+    // if (data.chunkBusy) return;
     // else data.waitTime += data.chunkDelay;
 
     let cx = floor(player.x / LENGTH);
@@ -179,7 +198,7 @@ function generateRadius() {
         let x = chunksToLoad[i][0];
         let z = chunksToLoad[i][1];
         data.chunkBusy = true;
-        // data.chunkTime = 0;
+        data.chunkTime = 0;
         delay = generateChunk(x, z);
         // if (data.chunkBusy) return;
         if (delay > 0) {

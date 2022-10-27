@@ -211,6 +211,8 @@ function getTextureArray(block) {
       return [23, 77];
     case "bedrock":
       return [320/16, 816/16];
+    case "crafting_table":
+      return [2, 64, 1, 64, 1, 64, 0, 64, 0, 64, 22, 77];
     case "oak_planks":
       return [22, 77];
     case "log":

@@ -18,11 +18,12 @@ var initProgram = async function() {
   data.fogDist = 10;
   data.waitTime = 0;
   data.renderedChunks = [];
-  data.chunkDelay = 4;
+  data.chunkDelay = 1;
   data.chunksGenerated = 0;
   data.dt = 0;
   settings.fog = true;
-  data.superflat = true;
+  settings.hand = "right";
+  data.superflat = false;
   seedPhrase = rnd(Math.random(), 10).toString().substring(2);
   seed = cyrb128(""+seedPhrase);
   rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
@@ -35,6 +36,12 @@ var initProgram = async function() {
   LENGTH = 16;
   WIDTH = 16;
   HEIGHT = 256;
+
+  /** LAZY CHUNKS **/
+  LazyChunk = null;
+  TotalBlockGen = 0;
+  MaxBlockGen = 5000;
+  VertexWaitTime = 100;
 
   /** PLAYER **/
   
