@@ -18,8 +18,12 @@ class Chunk {
     setBlock(x, y, z, block, update = false) {
         if (block == null && block == this.blocks[x][z][y]) return;
         this.blocks[x][z][y] = block;
+        
         if (!update) return;
-        buildBlock(this.buffer, this.blocks[x][z][y], true);
+        
+        saveChange(block, x, y, z);
+
+        buildBlock(this, block, true);
         calcNearby(x+this.X, y, z+this.Z);
         this.calcVertices(false);
     }
@@ -27,7 +31,7 @@ class Chunk {
     updateBlock(x, y, z) {
         let block = this.blocks[x][z][y];
         if (!block) return;
-        buildBlock(this.buffer, block, true);
+        buildBlock(this, block, true);
     }
 
     render() {
@@ -48,11 +52,12 @@ class Chunk {
 
         // Generate indices and vertices
         // and add them to the buffer
+        // await buildChunk(this, overwrite);
         for (let x = 0; x < LENGTH; x++) {
             if (overwrite) await sleep(VertexWaitTime);
             for (let z = 0; z < WIDTH; z++) {
                 for (let y = 0; y < HEIGHT; y++) {
-                    buildBlock(this.buffer, this.blocks[x][z][y], overwrite);
+                    buildBlock(this, this.blocks[x][z][y], overwrite);
                 }
             }
         }
@@ -147,7 +152,14 @@ function generateChunk(x, z) {
             }
 
             // Update Block
-            blocks[bx][bz][block.y] = createBlock(block.x, block.y, block.z, block.type);
+            let block2 = null;
+            if (block.type != null) {
+                block2 = createBlock(block.x, block.y, block.z, block.type);
+                block2.X = bx;
+                block2.Z = bz;
+            }
+            
+            blocks[bx][bz][block.y] = block2;
         }
         BlockQueue[x][z] = [];
     }

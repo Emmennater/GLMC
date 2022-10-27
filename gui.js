@@ -16,6 +16,7 @@ function initGui() {
     // );
 
     Components = [];
+    Components.push(new GuiComponenet(gui, ()=>"FPS: "+floor(60 / (data.dt * (60/1000)))));
     Components.push(new GuiComponenet(gui, ()=>"XYZ: "+floor(player.x)+" "+floor(player.y)+" "+floor(player.z)));
     Components.push(new GuiComponenet(gui, ()=>"chunks: "+data.chunksGenerated));
     Components.push(new GuiComponenet(gui, ()=>"seed: "+seedPhrase));

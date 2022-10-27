@@ -9,6 +9,25 @@ var initProgram = async function() {
   
   await sleep(100);
   
+  /** CHUNK **/
+  BlockQueue = {};
+  Blocks = {};
+  Chunks = {};
+  LENGTH = 16;
+  WIDTH = 16;
+  HEIGHT = 256;
+
+  /** LOAD WORLD **/
+  seedPhrase = null;
+  
+  if (!seedPhrase) {
+    seedPhrase = rnd(Math.random(), 10).toString().substring(2);
+  }
+
+  seed = cyrb128(""+seedPhrase);
+  rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
+  noise.seed(seed[0]/4 + seed[1]/4 + seed[2]/4 + seed[3]/4);
+
   /** DATA **/
   TOPCANVAS = null;
   data = {};
@@ -24,18 +43,8 @@ var initProgram = async function() {
   settings.fog = true;
   settings.hand = "right";
   data.superflat = false;
-  seedPhrase = rnd(Math.random(), 10).toString().substring(2);
-  seed = cyrb128(""+seedPhrase);
-  rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
-  noise.seed(seed[0]/4 + seed[1]/4 + seed[2]/4 + seed[3]/4);
-
-  /** CHUNK **/
-  BlockQueue = {};
-  Blocks = {};
-  Chunks = {};
-  LENGTH = 16;
-  WIDTH = 16;
-  HEIGHT = 256;
+  data.updateFps = 0;
+  data.blockEdits = {};
 
   /** LAZY CHUNKS **/
   LazyChunk = null;
@@ -131,6 +140,11 @@ var initProgram = async function() {
     lastUpdate = now;
     data.blocksUpdated = 0;
     data.updates = 0;
+    // data.fps = floor(60 / (data.dt * (60/1000)));
+
+    // if (data.updateFps <= 0) {
+    //   data.updateFps = 120;
+    // } else { data.updateFps -= data.dt; }
 
     // angle = performance.now() / 1000 / 6 * 2 * PI;
     drawBuffer.reset(gl);

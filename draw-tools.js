@@ -175,7 +175,7 @@ function calcNearby(x, y, z) {
         let block = getBlock(x+xo, y+yo, z+zo);
         let chunk = getChunk(x+xo, z+zo);
         if (!block) continue;
-        buildBlock(chunk.buffer, block, true);
+        buildBlock(chunk, block, true);
     }}}
 }
 
@@ -240,4 +240,12 @@ function getBlock(x, y, z) {
     if (y < 0 || y >= HEIGHT) return null;
     
     return Chunks[cx][cz].blocks[bx][bz][by];
+}
+
+function saveChange(block, x, y, z) {
+    let type = null;
+    if (block != null) type = block.type;
+    data.blockEdits[x+","+y+","+z] = [
+        type, x, y, z
+    ];
 }

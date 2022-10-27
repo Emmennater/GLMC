@@ -411,6 +411,50 @@ function roughSizeOfObject( object ) {
   return bytes;
 }
 
+function saveWorld() {
+  
+  var arr = Object.keys(data.blockEdits).map((key) => [data.blockEdits[key]]);
+  let output = JSON.stringify({
+    version: "1.0",
+    seed: seedPhrase,
+    blocks: arr.flat(2)
+  });
+  // console.log(output.replaceAll("\"", "\\\""));
+  download("NewWorld.glmc", output.replaceAll("\"", "\\\""))
+}
+
+function loadWorld(string) {
+
+  clearWorld();
+
+  let input = JSON.parse(string);
+  seedPhrase = input.seed;
+  let blocks = input.blocks;
+  for (let i=0; i<blocks.length; i+= 4) {
+    pushQueue(blocks[i], blocks[i+1],blocks[i+2], blocks[i+3]);
+  }
+}
+
+function download(filename, text) {
+  var pom = document.createElement('a');
+  pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  pom.setAttribute('download', filename);
+
+  if (document.createEvent) {
+      var event = document.createEvent('MouseEvents');
+      event.initEvent('click', true, true);
+      pom.dispatchEvent(event);
+  }
+  else {
+      pom.click();
+  }
+}
+
+function clearWorld() {
+  LazyChunk = null;
+  Chunks = {};
+}
+
 /*
 
 

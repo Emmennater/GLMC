@@ -71,7 +71,7 @@ class Player {
     let mult = 1;
     let grounded = this.y == this.yMin;
     let jumped = false;
-    let DELTAT = (data.dt * (1 / 17));
+    let DELTAT = (data.dt * (1 / (1000/60)));
 
     if (this.gamemode == "spectator") this.flying = true;
 
