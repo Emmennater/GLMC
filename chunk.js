@@ -16,6 +16,7 @@ class Chunk {
     }
 
     setBlock(x, y, z, block, update = false) {
+        if (block == null && block == this.blocks[x][z][y]) return;
         this.blocks[x][z][y] = block;
         if (!update) return;
         buildBlock(this.buffer, this.blocks[x][z][y], true);
