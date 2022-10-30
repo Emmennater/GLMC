@@ -106,7 +106,7 @@ function getTextureArray(block) {
     case "black_concrete":
       return [13, 26];
     case "white_concrete":
-      return [12, 26];
+      return [16, 416/16];
     case "sponge":
       return [0, 1040 / 16];
     case "we_sponge":
