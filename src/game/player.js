@@ -79,7 +79,8 @@ class Player {
     let mult = 1;
     let grounded = this.y == this.yMin;
     let jumped = false;
-    let DELTAT = (data.dt * 1 / (1000/60));
+    // let DELTAT = (data.dt * 1 / (1000/60));
+    let DELTAT = 60/(1/data.dt);
 
     if (this.gamemode == "spectator") this.flying = true;
 
@@ -446,8 +447,9 @@ class Player {
   }
 
   animate() {
-    let DELTAT = (data.dt * (1 / 16));
-    this.swing += Math.sign(this.hitAnimation) * 0.08 * DELTAT;
+    // let DELTAT = (data.dt * (1 / 16));
+    let DELTAT = 60/(1/data.dt);
+    this.swing += Math.sign(this.hitAnimation) * 0.09 * DELTAT;
     if (this.swing >= 1) {
       this.swing = 0;
       this.hitAnimation = 0;
@@ -469,6 +471,7 @@ class Player {
 
   placeBlock() {
     if (!focus) return;
+    if (this.itemSelected == null) return;
     if (!this.hoveredSide || !this.hovered) return;
 
     // let placing = createBlock(this.itemSelected);
@@ -489,11 +492,45 @@ class Player {
   }
 
   pickBlock() {
-    if (!focus) return;
+    // if (!focus) return;
     if (this.hovered == null) return;
     let cube = getBlock(this.hovered.x, this.hovered.y, this.hovered.z);
     if (cube == null) return;
     this.itemSelected = cube.type;
+
+    
+    // Look for item in hotbar
+    let hotbar = Objs.hotslots;
+    
+    if (hotbar.getItem(this.hotslot) == cube.type)
+      return;
+    
+    let index = hotbar.findItem(cube.type);
+    if (index != null) {
+      this.setHotslot(index);
+    } else {
+      let foundIndex = null;
+
+      // If selecting occupied slot find a new slot
+      let occupied = hotbar.getItem(this.hotslot) != null;
+      if (occupied) {
+        foundIndex = hotbar.addItem(cube.type);
+      }
+
+      if (foundIndex != null) {
+        // If new slot found set that slot to new type
+        hotbar.setSlot(foundIndex, cube.type);
+        this.setHotslot(foundIndex);
+      } else {
+        hotbar.setSlot(this.hotslot, cube.type);
+      }
+    }
+
+    resizeGui();
+  }
+
+  dropBlock() {
+
   }
 
   toggleGamemode() {
@@ -510,6 +547,15 @@ class Player {
 
   setHotslot(n) {
     this.hotslot = n;
+    let hotbar = Objs.hotslots;
+    this.itemSelected = hotbar.getItem(n);
+  }
+
+  setItemInHotbar(index, type) {
+    let hotbar = Objs.hotslots;
+    hotbar.setSlot(index, type);
+    hotbar.update();
+    updateHotbarSlot(index);
   }
 
 }

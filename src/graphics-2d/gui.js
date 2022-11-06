@@ -10,13 +10,14 @@ function initGui() {
 
     gui.fillRect(0, 0, window.innerWidth, window.innerHeight);
     GuiElements.hand = new DirImage("assets/stevehand.webp");
+    GuiElements.vignette = new DirImage("assets/vignette.png");
     // pattern = '#FFFFFF';
     // titleScreenImg = new DirImage("https://cdn.mos.cms.futurecdn.net/52K7sgnQLSJ8ggfyfvz9yB-1200-80.jpg",
     //     ()=>{pattern = gui.createPattern(titleScreenImg.img, "no-repeat");}
     // );
 
     Components = [];
-    Components.push(new GuiComponenet(gui, ()=>"FPS: "+floor(60 / (data.dt * (1000/60)))));
+    Components.push(new GuiComponenet(gui, ()=>"FPS: "+data.fps));
     Components.push(new GuiComponenet(gui, ()=>"XYZ: "+floor(player.x)+" "+floor(player.y)+" "+floor(player.z)));
     Components.push(new GuiComponenet(gui, ()=>"chunks: "+data.chunksGenerated));
     Components.push(new GuiComponenet(gui, ()=>"seed: "+seedPhrase));
@@ -39,11 +40,6 @@ function drawGui() {
     
     // Clear screen
     gui.clearRect(0, 0, W, H);
-    
-    // Debug menu
-    for (let i=0; i<Components.length; i++) {
-        Components[i].draw(i);
-    }
 
     // Hand
     let sizeX = 1400 * 3/14;
@@ -75,8 +71,16 @@ function drawGui() {
 
     // GuiElements.hand.draw(-A * sizeX, -sizeY/2, sizeX * 1.2, sizeY * 1.2 * (1 + A * 1.5));
 
-
     gui.restore();
+
+    // Vignette
+    GuiElements.vignette.draw(W/2, H/2, W, H);
+
+    // Debug menu
+    for (let i=0; i<Components.length; i++) {
+        Components[i].draw(i);
+    }
+
 }
 
 class GuiComponenet {

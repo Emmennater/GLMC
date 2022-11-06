@@ -91,6 +91,10 @@ function getTextureArray(block) {
       return [320 / 16, 816 / 16];
     case "crafting_table":
       return [2, 64, 1, 64, 1, 64, 0, 64, 0, 64, 22, 77];
+    case "bricks":
+      return [288/16, 928/16];
+    case "cobblestone":
+      return [32/16, 832/16];
     case "oak_planks":
       return [22, 77];
     case "log":
@@ -519,24 +523,24 @@ function calcShadow(block, x, y, z, side, vt) {
 
       switch (vt) {
         case 0: // - + (0, -) and 0 + -
-          count += checkOffset(x, y, z, -1, 1, 0);
-          count += checkOffset(x, y, z, -1, 1, -1);
-          count += checkOffset(x, y, z, 0, 1, -1);
+          count += checkOffset(block, x, y, z, -1, 1, 0);
+          count += checkOffset(block, x, y, z, -1, 1, -1);
+          count += checkOffset(block, x, y, z, 0, 1, -1);
           break;
         case 1: // - + (0, +) and 0 + +
-          count += checkOffset(x, y, z, -1, 1, 0);
-          count += checkOffset(x, y, z, -1, 1, 1);
-          count += checkOffset(x, y, z, 0, 1, 1);
+          count += checkOffset(block, x, y, z, -1, 1, 0);
+          count += checkOffset(block, x, y, z, -1, 1, 1);
+          count += checkOffset(block, x, y, z, 0, 1, 1);
           break;
         case 2: // + + (0, +) and 0 + +
-          count += checkOffset(x, y, z, 1, 1, 0);
-          count += checkOffset(x, y, z, 1, 1, 1);
-          count += checkOffset(x, y, z, 0, 1, 1);
+          count += checkOffset(block, x, y, z, 1, 1, 0);
+          count += checkOffset(block, x, y, z, 1, 1, 1);
+          count += checkOffset(block, x, y, z, 0, 1, 1);
           break;
         case 3: // + + (0, -) and 0 + -
-          count += checkOffset(x, y, z, 1, 1, 0);
-          count += checkOffset(x, y, z, 1, 1, -1);
-          count += checkOffset(x, y, z, 0, 1, -1);
+          count += checkOffset(block, x, y, z, 1, 1, 0);
+          count += checkOffset(block, x, y, z, 1, 1, -1);
+          count += checkOffset(block, x, y, z, 0, 1, -1);
           break;
       }
 
@@ -548,24 +552,24 @@ function calcShadow(block, x, y, z, side, vt) {
 
       switch (vt) {
         case 0: // - + (0, +) and - 0 +
-          count += checkOffset(x, y, z, -1, 1, 0);
-          count += checkOffset(x, y, z, -1, 1, 1);
-          count += checkOffset(x, y, z, -1, 0, 1);
+          count += checkOffset(block, x, y, z, -1, 1, 0);
+          count += checkOffset(block, x, y, z, -1, 1, 1);
+          count += checkOffset(block, x, y, z, -1, 0, 1);
           break;
         case 2: // - - (0, -) and - 0 -
-          count += checkOffset(x, y, z, -1, -1, 0);
-          count += checkOffset(x, y, z, -1, -1, -1);
-          count += checkOffset(x, y, z, -1, 0, -1);
+          count += checkOffset(block, x, y, z, -1, -1, 0);
+          count += checkOffset(block, x, y, z, -1, -1, -1);
+          count += checkOffset(block, x, y, z, -1, 0, -1);
           break;
         case 1: // - - (0, +) and - 0 +
-          count += checkOffset(x, y, z, -1, -1, 0);
-          count += checkOffset(x, y, z, -1, -1, 1);
-          count += checkOffset(x, y, z, -1, 0, 1);
+          count += checkOffset(block, x, y, z, -1, -1, 0);
+          count += checkOffset(block, x, y, z, -1, -1, 1);
+          count += checkOffset(block, x, y, z, -1, 0, 1);
           break;
         case 3: // - + (0, -) and - 0 -
-          count += checkOffset(x, y, z, -1, 1, 0);
-          count += checkOffset(x, y, z, -1, 1, -1);
-          count += checkOffset(x, y, z, -1, 0, -1);
+          count += checkOffset(block, x, y, z, -1, 1, 0);
+          count += checkOffset(block, x, y, z, -1, 1, -1);
+          count += checkOffset(block, x, y, z, -1, 0, -1);
           break;
       }
       break;
@@ -575,24 +579,24 @@ function calcShadow(block, x, y, z, side, vt) {
 
       switch (vt) {
         case 0: // + + (0, +) and + 0 +
-          count += checkOffset(x, y, z, 1, 1, 0);
-          count += checkOffset(x, y, z, 1, 1, 1);
-          count += checkOffset(x, y, z, 1, 0, 1);
+          count += checkOffset(block, x, y, z, 1, 1, 0);
+          count += checkOffset(block, x, y, z, 1, 1, 1);
+          count += checkOffset(block, x, y, z, 1, 0, 1);
           break;
         case 1: // + - (0, +) and + 0 +
-          count += checkOffset(x, y, z, 1, -1, 0);
-          count += checkOffset(x, y, z, 1, -1, 1);
-          count += checkOffset(x, y, z, 1, 0, 1);
+          count += checkOffset(block, x, y, z, 1, -1, 0);
+          count += checkOffset(block, x, y, z, 1, -1, 1);
+          count += checkOffset(block, x, y, z, 1, 0, 1);
           break;
         case 2: // + - (0, -) and + 0 -
-          count += checkOffset(x, y, z, 1, -1, 0);
-          count += checkOffset(x, y, z, 1, -1, -1);
-          count += checkOffset(x, y, z, 1, 0, -1);
+          count += checkOffset(block, x, y, z, 1, -1, 0);
+          count += checkOffset(block, x, y, z, 1, -1, -1);
+          count += checkOffset(block, x, y, z, 1, 0, -1);
           break;
         case 3: // + + (0, -) and + 0 -
-          count += checkOffset(x, y, z, 1, 1, 0);
-          count += checkOffset(x, y, z, 1, 1, -1);
-          count += checkOffset(x, y, z, 1, 0, -1);
+          count += checkOffset(block, x, y, z, 1, 1, 0);
+          count += checkOffset(block, x, y, z, 1, 1, -1);
+          count += checkOffset(block, x, y, z, 1, 0, -1);
           break;
       }
 
@@ -604,24 +608,24 @@ function calcShadow(block, x, y, z, side, vt) {
 
       switch (vt) {
         case 0: // (0, +) + + and + 0 +
-          count += checkOffset(x, y, z, 0, 1, 1);
-          count += checkOffset(x, y, z, 1, 1, 1);
-          count += checkOffset(x, y, z, 1, 0, 1);
+          count += checkOffset(block, x, y, z, 0, 1, 1);
+          count += checkOffset(block, x, y, z, 1, 1, 1);
+          count += checkOffset(block, x, y, z, 1, 0, 1);
           break;
         case 1: // (0, +) - + and + 0 +
-          count += checkOffset(x, y, z, 0, -1, 1);
-          count += checkOffset(x, y, z, 1, -1, 1);
-          count += checkOffset(x, y, z, 1, 0, 1);
+          count += checkOffset(block, x, y, z, 0, -1, 1);
+          count += checkOffset(block, x, y, z, 1, -1, 1);
+          count += checkOffset(block, x, y, z, 1, 0, 1);
           break;
         case 2: // (0, -) - + and - 0 +
-          count += checkOffset(x, y, z, 0, -1, 1);
-          count += checkOffset(x, y, z, -1, -1, 1);
-          count += checkOffset(x, y, z, -1, 0, 1);
+          count += checkOffset(block, x, y, z, 0, -1, 1);
+          count += checkOffset(block, x, y, z, -1, -1, 1);
+          count += checkOffset(block, x, y, z, -1, 0, 1);
           break;
         case 3: // (0, -) + + and - 0 +
-          count += checkOffset(x, y, z, 0, 1, 1);
-          count += checkOffset(x, y, z, -1, 1, 1);
-          count += checkOffset(x, y, z, -1, 0, 1);
+          count += checkOffset(block, x, y, z, 0, 1, 1);
+          count += checkOffset(block, x, y, z, -1, 1, 1);
+          count += checkOffset(block, x, y, z, -1, 0, 1);
           break;
       }
 
@@ -633,24 +637,24 @@ function calcShadow(block, x, y, z, side, vt) {
 
       switch (vt) {
         case 0: // (0, +) + - and + 0 -
-          count += checkOffset(x, y, z, 0, 1, -1);
-          count += checkOffset(x, y, z, 1, 1, -1);
-          count += checkOffset(x, y, z, 1, 0, -1);
+          count += checkOffset(block, x, y, z, 0, 1, -1);
+          count += checkOffset(block, x, y, z, 1, 1, -1);
+          count += checkOffset(block, x, y, z, 1, 0, -1);
           break;
         case 1: // (0, +) - - and + 0 -
-          count += checkOffset(x, y, z, 0, -1, -1);
-          count += checkOffset(x, y, z, 1, -1, -1);
-          count += checkOffset(x, y, z, 1, 0, -1);
+          count += checkOffset(block, x, y, z, 0, -1, -1);
+          count += checkOffset(block, x, y, z, 1, -1, -1);
+          count += checkOffset(block, x, y, z, 1, 0, -1);
           break;
         case 2: // (0, -) - - and - 0 -
-          count += checkOffset(x, y, z, 0, -1, -1);
-          count += checkOffset(x, y, z, -1, -1, -1);
-          count += checkOffset(x, y, z, -1, 0, -1);
+          count += checkOffset(block, x, y, z, 0, -1, -1);
+          count += checkOffset(block, x, y, z, -1, -1, -1);
+          count += checkOffset(block, x, y, z, -1, 0, -1);
           break;
         case 3: // (0, -) + - and - 0 -
-          count += checkOffset(x, y, z, 0, 1, -1);
-          count += checkOffset(x, y, z, -1, 1, -1);
-          count += checkOffset(x, y, z, -1, 0, -1);
+          count += checkOffset(block, x, y, z, 0, 1, -1);
+          count += checkOffset(block, x, y, z, -1, 1, -1);
+          count += checkOffset(block, x, y, z, -1, 0, -1);
           break;
       }
 
@@ -661,24 +665,24 @@ function calcShadow(block, x, y, z, side, vt) {
 
       switch (vt) {
         case 0: // - - (0, -) and 0 - -
-          count += checkOffset(x, y, z, -1, -1, 0);
-          count += checkOffset(x, y, z, -1, -1, -1);
-          count += checkOffset(x, y, z, 0, -1, -1);
+          count += checkOffset(block, x, y, z, -1, -1, 0);
+          count += checkOffset(block, x, y, z, -1, -1, -1);
+          count += checkOffset(block, x, y, z, 0, -1, -1);
           break;
         case 1: // - - (0, +) and 0 - +
-          count += checkOffset(x, y, z, -1, -1, 0);
-          count += checkOffset(x, y, z, -1, -1, 1);
-          count += checkOffset(x, y, z, 0, -1, 1);
+          count += checkOffset(block, x, y, z, -1, -1, 0);
+          count += checkOffset(block, x, y, z, -1, -1, 1);
+          count += checkOffset(block, x, y, z, 0, -1, 1);
           break;
         case 2: // + - (0, +) and 0 - +
-          count += checkOffset(x, y, z, 1, -1, 0);
-          count += checkOffset(x, y, z, 1, -1, 1);
-          count += checkOffset(x, y, z, 0, -1, 1);
+          count += checkOffset(block, x, y, z, 1, -1, 0);
+          count += checkOffset(block, x, y, z, 1, -1, 1);
+          count += checkOffset(block, x, y, z, 0, -1, 1);
           break;
         case 3: // + - (0, -) and 0 - -
-          count += checkOffset(x, y, z, 1, -1, 0);
-          count += checkOffset(x, y, z, 1, -1, -1);
-          count += checkOffset(x, y, z, 0, -1, -1);
+          count += checkOffset(block, x, y, z, 1, -1, 0);
+          count += checkOffset(block, x, y, z, 1, -1, -1);
+          count += checkOffset(block, x, y, z, 0, -1, -1);
           break;
       }
 
@@ -701,12 +705,116 @@ function calcShadow(block, x, y, z, side, vt) {
   };
 }
 
-function checkOffset(x, y, z, xo, yo, zo) {
+function checkOffset(b1, x, y, z, xo, yo, zo) {
   let block = getBlock(x + xo, y + yo, z + zo);
-  let b1 = getBlock(x, y, z);
   if (block == null) return 0;
   return !block.transparent || (!block.solid && block.transparent);
   // return 1;
+}
+
+class VertexCalcuator {
+  constructor(chunk) {
+    this.chunk = chunk;
+    this.buffer = this.chunk.buffer;
+  }
+
+  calculateBlock(block, overwrite = false) {
+    if (!block) return;
+    // if (overwrite && this.chunk.complete) console.log(block.type);
+    // block.calculated = true;
+
+    // Use previous calculations
+    if (!overwrite) {
+      if (block.bits == 0) return;
+    }
+
+    data.blocksUpdated++;
+
+    let x = block.x;
+    let y = block.y;
+    let z = block.z;
+
+    let skipSides = [];
+    if (overwrite) {
+      // block.sides = 0;
+      block.bits = 0;
+      skipSides = removeFaces(block, x, y, z);
+      for (let i=0; i<skipSides.length; i++) {
+        block.bits += (2 ** i) * (1 - skipSides[i]);
+      }
+      if (block.bits == 0) return;
+    }
+
+    let vertices = this.buffer.vertices;
+    let indices = this.buffer.indices;
+
+    // block.vtIdx = vertices.length; // this.vertexOffset;
+    // block.idIdx = indices.length; // this.indexOffset;
+
+    const TOTAL_SIDES = indices.length / 6;
+    const TOTAL_VERTS = TOTAL_SIDES * 4;
+    const TEXTURE_WIDTH = 384; //256;
+    const TEXTURE_HEIGHT = 1520; //944;
+    const TXRW = TEXTURE_WIDTH / 16;
+    const TXRH = TEXTURE_HEIGHT / 16;
+    const L = 1, W = 1, H = 1;
+    let totalVerts = 0;
+    let txr = getTexture(block.type);
+    let color = getColor(block.type);
+    let COL = [1, 1, 1];
+    let voff = 0;
+
+    // Iterate over all 6 sides
+    for (let side = 0; side < 6; side++) {
+      // if (skipSides[side]) continue;
+      if (block.bits && !(block.bits & 2 ** side)) continue;
+      // if (overwrite) block.sides++;
+
+      // Iterate over vertices
+      for (let j = 0; j < 4; j++) {
+        
+        let vstart = 4 * 5 * side + j * 5; // skip 5 attributes
+
+        // Calculate texture coordinates
+        let vt = CUBE_VERTICES;
+        let U = txr[2 * side + 0];
+        let V = txr[2 * side + 1];
+        let u = (vt[vstart + 3] + U) / TXRW;
+        let v = (vt[vstart + 4] + V) / TXRH;
+
+        // Calculate shade
+        let shade = 0.5 - (side / 6) / 2 + 0.5;
+        let X = vt[vstart + 0] / 2 * L + x;
+        let Y = vt[vstart + 1] / 2 * W + y;
+        let Z = vt[vstart + 2] / 2 * H + z;
+
+        let shadow = calcShadow(block, x, y, z, side, j);
+
+        // Append vertices
+        vertices.push(
+          X, Y, Z, u, v,
+          shade * shadow.r * color[0] * COL[0],
+          shade * shadow.g * color[1] * COL[1],
+          shade * shadow.b * color[2] * COL[2],
+          1, 1
+        );
+      }
+
+      // Append indices
+      for (let j = side * 6; j < side * 6 + 6; j++) {
+        let idx = CUBE_INDICES[j] - side * 4;
+        indices.push(TOTAL_VERTS + totalVerts + idx);
+      }
+      totalVerts += 4; // next face is 4 vertices away
+    }
+
+    // Clear data to save memory
+    // if (block.vdata) {
+    //   block.vdata.length = 0;
+    //   delete block.vdata;
+    // }
+  }
+
 }
 
 /*

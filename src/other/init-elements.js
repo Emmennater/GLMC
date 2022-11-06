@@ -56,7 +56,7 @@ function initCanvasElements() {
       document.exitPointerLock();
     }
 
-    let index = player.hotslot;
+    let index = null;
     // console.log(KEY);
     switch (KEY) {
       case "!": case "1": index = 0; break;
@@ -69,8 +69,12 @@ function initCanvasElements() {
       case "*": case "8": index = 7; break;
       case "(": case "9": index = 8; break;
     }
-    player.setHotslot(index);
-    updateHotbarSlot(index);
+
+    if (index != null) {
+      player.setHotslot(index);
+      resizeGui();
+      // updateHotbarSlot(index);
+    }
     
     keys[KEY] = true;
   });
@@ -116,8 +120,9 @@ function initCanvasElements() {
       return;
     }
     
-    player.hotslot = (((player.hotslot + off) % 9) + 9) % 9;
-    updateHotbarSlot();
+    let newSlot = (((player.hotslot + off) % 9) + 9) % 9;
+    player.setHotslot(newSlot);
+    resizeGui();
   });
 
 }

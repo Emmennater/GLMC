@@ -29,6 +29,7 @@ var initProgram = async function() {
   data.chunkDelay = 1;
   data.chunksGenerated = 0;
   data.dt = 0;
+  data.fps = 0;
   settings.fog = true;
   settings.hand = "right";
   data.superflat = false;
@@ -39,7 +40,7 @@ var initProgram = async function() {
   LazyChunk = null;
   TotalBlockGen = 0;
   MaxBlockGen = 5000;
-  VertexWaitTime = 10;
+  VertexWaitTime = 50;
 
   /** LOAD WORLD **/
   seedPhrase = null;
@@ -92,19 +93,20 @@ var initProgram = async function() {
 
   // Render loop
   var angle = 0;
-  var lastUpdate = Date.now();
-  var loop = function() {
+  // var lastUpdate = Date.now();
+  let then = 0;
+  var loop = function(now) {
 
-    var now = Date.now();
-    data.dt = now - lastUpdate;
-    lastUpdate = now;
+    now *= 0.001;
+    data.dt = now - then;
+    then = now;
     data.blocksUpdated = 0;
     data.updates = 0;
-    // data.fps = floor(60 / (data.dt * (60/1000)));
-
-    // if (data.updateFps <= 0) {
-    //   data.updateFps = 120;
-    // } else { data.updateFps -= data.dt; }
+    
+    if (data.updateFps <= 0) {
+      data.fps = floor(1 / data.dt);
+      data.updateFps = 0.5;
+    } else { data.updateFps -= data.dt; }
 
     drawBuffer.reset(gl);
 

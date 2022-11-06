@@ -265,3 +265,19 @@ function createCube(x, y, z, type = "smooth_stone") {
     //         }
     //     }
     // }
+
+
+function calculateFog(gl, buffer) {
+    // x, y, z, tx, ty, r, g, b, a, fog
+    let D = 50;
+    for (let i=0; i<buffer.vertices.length; i+=10) {
+        let x = buffer.vertices[i+0];
+        let y = buffer.vertices[i+1];
+        let z = buffer.vertices[i+2];
+        let d = dist(x, y, z, player.x, player.y, player.z) / D;
+        buffer.vertices[i+9] = Math.min(1-(d*d), 1);
+    }
+
+    buffer.setAttributes(gl);
+}
+

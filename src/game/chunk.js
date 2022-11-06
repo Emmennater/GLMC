@@ -9,6 +9,7 @@ class Chunk {
         this.blocks = [];
         this.complete = false;
         this.calculating = false;
+        this.calcVt = new VertexCalcuator(this);
     }
 
     getBlock(x, y, z) {
@@ -23,15 +24,17 @@ class Chunk {
         
         saveChange(block, x+this.X, y, z+this.Z);
 
-        buildBlock(this, block, true);
-        calcNearby(x+this.X, y, z+this.Z);
-        this.calcVertices(false);
+        this.calcVt.calculateBlock(block, true);
+        // buildBlock(this, block, true);
+        // calcNearby(x+this.X, y, z+this.Z);
+        // this.calcVertices(false);
     }
 
-    updateBlock(x, y, z) {
-        let block = this.blocks[x][z][y];
+    updateBlock(block) {
+        // let block = this.blocks[x][z][y];
         if (!block) return;
-        buildBlock(this, block, true);
+        this.calcVt.calculateBlock(block, true);
+        // buildBlock(this, block, true);
     }
 
     render() {
@@ -46,6 +49,9 @@ class Chunk {
     }
 
     async calcVertices(overwrite = true) {
+        // console.log("calcing: ", this.x, this.z);
+        // if (this.hasCalculated) console.log("recalc!");
+        this.hasCalculated = true;
         this.calculating = true;
         this.buffer.vertices = [];
         this.buffer.indices = [];
@@ -57,7 +63,9 @@ class Chunk {
             if (overwrite) await sleep(VertexWaitTime);
             for (let z = 0; z < WIDTH; z++) {
                 for (let y = 0; y < HEIGHT; y++) {
-                    buildBlock(this, this.blocks[x][z][y], overwrite);
+                    let block = this.blocks[x][z][y];
+                    this.calcVt.calculateBlock(block, overwrite);
+                    // buildBlock(this, this.blocks[x][z][y], overwrite);
                 }
             }
         }
