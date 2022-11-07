@@ -1,10 +1,10 @@
 # GLMC
- A recreation of Minecraft in Javascript using WebGL
+ A recreation of <b>Minecraft</b> in Javascript using WebGL
 
 <b>Controls:</b>
-WASD: movement
-left click: break
-right click: place
-middle click: pick block
-o: toggle options
-zxc+scroll: zoom
+- WASD: movement
+- left click: break
+- right click: place
+- middle click: pick block
+- o: toggle options
+- zxc+scroll: zoom
