@@ -92,7 +92,24 @@ function setupElements() {
     loadWorld(loadBox.value.replaceAll('\\', ''));
   }
 
+  toggleInputVisibility();
+
   // data.font = new FontFace('myFont', 'url(assets/mcfont.otf)');
+}
+
+function toggleInputVisibility() {
+  toggleInput(itemBox);
+  toggleInput(saveButton);
+  toggleInput(loadBox);
+  toggleInput(loadButton);
+}
+
+function toggleInput(inp) {
+  if (inp.style.visibility == "hidden") {
+    inp.style.visibility = "visible";
+  } else {
+    inp.style.visibility = "hidden";
+  }
 }
 
 function loadWorldString() {

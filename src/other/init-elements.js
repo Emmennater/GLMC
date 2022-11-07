@@ -57,6 +57,10 @@ function initCanvasElements() {
       document.exitPointerLock();
     }
 
+    if (KEY == "O") {
+      toggleInputVisibility();
+    }
+
     let index = null;
     // console.log(KEY);
     switch (KEY) {
