@@ -40,8 +40,8 @@ class Player {
     this.pjumped = false;
     this.hovered = null;
     this.hoveredSide = null;
-    this.itemSelected = "smooth_stone";
     this.hotslot = 0;
+    this.itemSelected = "smooth_stone";
 
     // Animations
     this.swing = 0.0;
@@ -496,7 +496,7 @@ class Player {
     if (this.hovered == null) return;
     let cube = getBlock(this.hovered.x, this.hovered.y, this.hovered.z);
     if (cube == null) return;
-    this.itemSelected = cube.type;
+    this.setHolding(cube.type);
 
     
     // Look for item in hotbar
@@ -530,7 +530,9 @@ class Player {
   }
 
   dropBlock() {
-
+    this.setHolding(null);
+    hotbar.setSlot(this.hotslot, null);
+    hotbar.update();
   }
 
   toggleGamemode() {
@@ -548,7 +550,7 @@ class Player {
   setHotslot(n) {
     this.hotslot = n;
     let hotbar = Objs.hotslots;
-    this.itemSelected = hotbar.getItem(n);
+    this.setHolding(hotbar.getItem(n));
   }
 
   setItemInHotbar(index, type) {
@@ -556,6 +558,14 @@ class Player {
     hotbar.setSlot(index, type);
     hotbar.update();
     updateHotbarSlot(index);
+  }
+
+  setHolding(item) {
+    this.itemSelected = item;
+
+    // Update item box
+    if (item == null) itemBox.value = "";
+    else itemBox.value = item;
   }
 
 }

@@ -9,53 +9,14 @@ var initProgram = async function() {
   
   await sleep(100);
   
-  /** CHUNK **/
-  BlockQueue = {};
-  Blocks = {};
-  Chunks = {};
-  LENGTH = 16;
-  WIDTH = 16;
-  HEIGHT = 256;
+  setupData();
 
-  /** DATA **/
-  TOPCANVAS = null;
-  data = {};
-  settings = {};
-  data.renderDistance = 8;
-  data.renderedChunks = 0;
-  data.fogDist = 10;
-  data.waitTime = 0;
-  data.renderedChunks = [];
-  data.chunkDelay = 1;
-  data.chunksGenerated = 0;
-  data.dt = 0;
-  data.fps = 0;
-  settings.fog = true;
-  settings.hand = "right";
-  data.superflat = false;
-  data.updateFps = 0;
-  data.blockEdits = {};
-
-  /** LAZY CHUNKS **/
-  LazyChunk = null;
-  TotalBlockGen = 0;
-  MaxBlockGen = 5000;
-  VertexWaitTime = 50;
-
-  /** LOAD WORLD **/
-  seedPhrase = null;
-  
-  if (!seedPhrase) {
-    seedPhrase = rnd(Math.random(), 10).toString().substring(2);
-  }
-
-  seed = cyrb128(""+seedPhrase);
-  rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
-  noise.seed(seed[0]/4 + seed[1]/4 + seed[2]/4 + seed[3]/4);
+  setupElements();
 
   /** PLAYER **/
-  player = new Player(8, 128+10, 8);
+  player = new Player(8, 0+2, 8);
   player.flying = false;
+  itemBox.value = player.itemSelected;
 
   // Draw hotbar
   initWebgl2D();
@@ -72,7 +33,8 @@ var initProgram = async function() {
 
   // Sky color
   sky = "#91b9fa";
-  sky = [145, 185, 250];
+  // sky = [145, 185, 250];
+  sky = [0, 0, 0];
   sky = {r:sky[0]/255, g:sky[1]/255, b:sky[2]/255};
   
   /** CREATE BUFFERS **/
@@ -110,9 +72,12 @@ var initProgram = async function() {
 
     drawBuffer.reset(gl);
 
-    player.look();
-    player.move();
-    player.use();
+    // Player actions
+    if (!data.busy && !data.keybusy) {
+      player.look();
+      player.move();
+      player.use();
+    }
 
     updateMatricies();
     
@@ -156,6 +121,7 @@ var initProgram = async function() {
 
     moveX = 0;
     moveY = 0;
+    data.busy = false;
 
     requestAnimationFrame(loop);
   }

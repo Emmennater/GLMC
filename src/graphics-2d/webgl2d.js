@@ -71,7 +71,7 @@ async function initWebgl2D() {
   
   /** CREATE TEXTURES **/
   let widgets = new Texture("https://i.ibb.co/993wyXL/widgets-png.png");
-  let blocktxrs = new Texture("https://i.ibb.co/k26xTvB/atlas.png");
+  let blocktxrs = new Texture(data.atlasLink);
   widgets.loadImage(() =>
     blocktxrs.loadImage(() =>
       webglSetup2D(gl2d, program, widgets, blocktxrs)));
@@ -99,6 +99,16 @@ function webglSetup2D(GL, program, textures1, textures2) {
   let hotslots = new Hotbar(textures2.img);
 
   // Set initial hotbar
+  // hotslots.setSlot(0, "void_block");
+  // hotslots.setSlot(1, "heaven_block");
+  // hotslots.setSlot(2, "red_glow_block");
+  // hotslots.setSlot(3, "orange_glow_block");
+  // hotslots.setSlot(4, "yellow_glow_block");
+  // hotslots.setSlot(5, "green_glow_block");
+  // hotslots.setSlot(6, "blue_glow_block");
+  // hotslots.setSlot(7, "purple_glow_block");
+  // hotslots.setSlot(8, "pink_glow_block");
+
   hotslots.setSlot(0, "stone");
   hotslots.setSlot(1, "cobblestone");
   hotslots.setSlot(2, "bricks");
@@ -123,6 +133,9 @@ function webglSetup2D(GL, program, textures1, textures2) {
   // blocktxr.setFaceTxr(0, x1+0.01, y1+0.01, x1+16, y1+16);
   // blocktxr.setFaceTxr(1, x2+0.01, y2+0.01, x2+16, y2+16);
   // blocktxr.setFaceTxr(2, x3+0.01, y3+0.01, x3+16, y3+16);
+
+  // Set player holding
+  player.setHolding(hotslots.getItem(player.hotslot));
 
   // Create buffers
   let buffer2d = new Buffer2D(GL, program);

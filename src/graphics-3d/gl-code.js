@@ -1,4 +1,9 @@
 
+/**
+ * Vertex and Shader code
+ * sent to GPU
+ */
+
 var blockVertexShaderSrc = `
 attribute vec3  aVertex;
 attribute vec2  aTexture;
@@ -73,9 +78,12 @@ varying float fragFog;
 uniform sampler2D sampler;
 
 vec4 fog(vec4 color) {
-  color.r += (0.57 - color.r) * fragFog;
-  color.g += (0.73 - color.g) * fragFog;
-  color.b += (0.98 - color.b) * fragFog;
+  float r = 0.0;; //0.57;
+  float g = 0.0;; //0.73;
+  float b = 0.0;; //0.98;
+  color.r += (r - color.r) * fragFog;
+  color.g += (g - color.g) * fragFog;
+  color.b += (b - color.b) * fragFog;
   return color;
 }
 

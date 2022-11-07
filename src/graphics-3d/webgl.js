@@ -147,13 +147,11 @@ function createTextures() {
     gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
   }
-  // olds:
-  // https://i.ibb.co/KFMNywR/atlas2.png
-  img.src = "https://i.ibb.co/k26xTvB/atlas.png" + "?not-from-cache-please";
+
+  img.src = data.atlasLink + "?not-from-cache-please";
   textures = img;
   
   // gl.activeTexture(gl.TEXURE0);
-  
   gl.bindTexture(gl.TEXTURE_2D, null); // unbind texture
 }
 

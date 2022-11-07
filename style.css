@@ -3,8 +3,14 @@ html, body {
   padding: 0;
   background-color: #202020;
 }
+
 canvas {
   position: absolute;
+}
+
+@font-face {
+	font-family: 'mcfont';
+	src: url('assets/mcfont.otf');
 }
 
 i {
@@ -37,3 +43,50 @@ img {
   margin-top: -3px;
   margin-left: -3px;
 }
+
+input, button {
+  z-index: 3;
+  width: 180px;
+  height: 22px;
+  bottom: 0px;
+  margin: 4px;
+  position: fixed;
+  
+  color: #CCCCCC;
+  font-size: 20px;
+  font-family: 'mcfont';
+  background-color: #20202050;
+  outline: #AAAAAA90 solid;
+}
+
+button {
+  z-index: 3;
+  width: 120px;
+  height: 22px;
+  bottom: 40px;
+  padding-bottom: 20px;
+
+  position: fixed;
+  transition-timing-function: linear;
+  transition-duration: 0.2s;
+}
+
+button:hover {
+  outline-color: #55c059; /* Green */
+  color: #74d178;
+  cursor: pointer;
+}
+
+button:active {
+  transition-duration: 0s;
+  outline-color: #558856; /* Green */
+  color: #356337;
+  cursor: pointer;
+}
+
+span {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+

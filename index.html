@@ -11,6 +11,10 @@
     </canvas>
     <canvas id="web2d" width="600" height="500" style="z-index: 3"></canvas>
     <canvas id="gui" width="600" height="500" style="z-index: 2"></canvas>
+    <input type="text" id="itembox">
+    <button type="button" id="saveworld"><span>save</span></button>
+    <input type="text" id="loadbox" style="left: 210px;">
+    <button type="button" id="loadworld" style="left: 210px;"><span>load</span></button>
     <img src="assets/crosshair.png" class="center"></img>
     <main>
     </main>
@@ -20,10 +24,20 @@
     <script src="src/libraries/noise.js"></script>
     <script src="src/libraries/pseudo-random.js"></script>
 
+    <!-- MY 3D LIB -->
+    <script src="src/graphics-3d/my-3d-lib/shapes/vertex.js"></script>
+    <script src="src/graphics-3d/my-3d-lib/shapes/tri.js"></script>
+    <script src="src/graphics-3d/my-3d-lib/shapes/face.js"></script>
+    <script src="src/graphics-3d/my-3d-lib/shapes/cube.js"></script>
+    <script src="src/graphics-3d/my-3d-lib/objects/mc-block.js"></script>
+    <script src="src/graphics-3d/my-3d-lib/group.js"></script>
+
     <!-- GLMC -->
+    <script src="data/save.js"></script>
     <script src="src/other/math.js"></script>
     <script src="src/other/init-elements.js"></script>
     <script src="src/other/helper.js"></script>
+    <script src="src/other/setup.js"></script>
     <script src="src/graphics-2d/2d-classes.js"></script>
     <script src="src/graphics-2d/hotbar.js"></script>
     <script src="src/graphics-2d/gui.js"></script>

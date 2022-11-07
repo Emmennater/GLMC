@@ -93,16 +93,33 @@ class GuiComponenet {
         let xo = 6;
         let gpx = 4;
         let gpy = 2;
-        let sz = 16;
+        let sz = 18;
         let yo = 4 + i * (sz + 4);
         let txt = this.txt();
 
-        gui.font = sz+"px monospace";
+        gui.font = sz+"px mcfont";
         gui.textAlign = "left";
         gui.textBaseline = "top";
 
         gui.fillStyle = "#00000070";
-        let w = txt.length * sz * 0.56;
+        let w = txt.length * sz * 0.6; //0.56;
+
+        const fontSize = sz;
+        let text = document.createElement("span");
+        document.body.appendChild(text);
+
+        text.style.font = gui.font;
+        text.style.fontSize = sz + "px";
+        text.style.height = 'auto';
+        text.style.width = 'auto';
+        text.style.position = 'absolute';
+        text.style.whiteSpace = 'no-wrap';
+        text.innerHTML = txt;
+
+        w = text.clientWidth;
+        
+        document.body.removeChild(text);
+
         gui.fillRect(xo-gpx, yo-gpy-0.5, w+gpx*2, sz+gpy*2)
 
         gui.fillStyle = "#FFFFFF";

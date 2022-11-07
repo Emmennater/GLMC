@@ -9,7 +9,6 @@ class Chunk {
         this.blocks = [];
         this.complete = false;
         this.calculating = false;
-        this.calcVt = new VertexCalcuator(this);
     }
 
     getBlock(x, y, z) {
@@ -24,17 +23,53 @@ class Chunk {
         
         saveChange(block, x+this.X, y, z+this.Z);
 
-        this.calcVt.calculateBlock(block, true);
-        // buildBlock(this, block, true);
-        // calcNearby(x+this.X, y, z+this.Z);
-        // this.calcVertices(false);
+        CubeHandler.buildCube(block, true, this.buffer);
     }
 
     updateBlock(block) {
-        // let block = this.blocks[x][z][y];
+        // Only update if not null (air)
         if (!block) return;
-        this.calcVt.calculateBlock(block, true);
-        // buildBlock(this, block, true);
+
+        // Calculate the block
+        CubeHandler.buildCube(block, true, this.buffer);
+    }
+
+    updateBlocksNearby(x, y, z, bx, by, bz) {
+        // Update nearby blocks
+        let chunks = [];
+        chunks.push(this);
+        for (let xo = -1; xo <= 1; xo++) {
+            for (let yo = -1; yo <= 1; yo++) {
+                for (let zo = -1; zo <= 1; zo++) {
+                    if (xo == 0 && yo == 0 && zo == 0) continue;
+                    // Get offset position
+                    bx = x + xo;
+                    by = y + yo;
+                    bz = z + zo;
+
+                    // Get chunk and block for that position
+                    let chunk2 = getChunk(bx, bz);
+                    let coord = getChunkCoord(bx, by, bz);
+                    let block = chunk2.blocks[coord.x][coord.z][coord.y];
+                    
+                    // If the block isnt null (air) update it
+                    if (!block) continue;
+                    chunk2.updateBlock(block);
+
+                    // Add it to chunks that require updating
+                    chunks.push(chunk2);
+                }
+            }
+        }
+
+        // Update the chunks
+        for (let i in chunks) {
+            if (chunks[i].accounted) continue;
+            chunks[i].accounted = true;
+            chunks[i].calcVertices(false);
+        }
+        for (let i in chunks)
+            chunks[i].accounted = false;
     }
 
     render() {
@@ -64,8 +99,7 @@ class Chunk {
             for (let z = 0; z < WIDTH; z++) {
                 for (let y = 0; y < HEIGHT; y++) {
                     let block = this.blocks[x][z][y];
-                    this.calcVt.calculateBlock(block, overwrite);
-                    // buildBlock(this, this.blocks[x][z][y], overwrite);
+                    CubeHandler.buildCube(block, overwrite, this.buffer);
                 }
             }
         }
@@ -134,9 +168,9 @@ function generateChunk(x, z) {
     if (Chunks[x][z] == undefined) {
         let blocks = Generate(x, z);
         if (LazyChunk == null) {
-            let chunk = new Chunk(cx, cz);
+            let chunk = new Chunk(x, z);
             chunk.blocks = blocks;
-            Chunks[cx][cz] = chunk;
+            Chunks[x][z] = chunk;
         } else { return DELAY; }
     }
 

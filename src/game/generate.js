@@ -1,6 +1,10 @@
 function Generate(cx, cz, bx = 0, bz = 0, blocks = null) {
+
+    let mode = data.superflat ? "superflat" : "normal";
     let cxoff = cx * LENGTH;
     let czoff = cz * WIDTH;
+
+    mode = "void";
 
     if (blocks == null) {
         blocks = [];
@@ -30,8 +34,18 @@ function Generate(cx, cz, bx = 0, bz = 0, blocks = null) {
             let x1 = x + cxoff;
             let z1 = z + czoff;
 
-            if (data.superflat) {
+            // Superflat center
+            // if (dist2(0, 0, x1, z1) < 100) {
+            //     mode = "superflat";
+            // } else {
+            //     mode = "normal";
+            // }
+
+            if (mode == "superflat") {
                 y1 = 5;
+            } else
+            if (mode == "void") {
+                y1 = 1;
             } else {
 
                 // noise terrain
@@ -51,7 +65,7 @@ function Generate(cx, cz, bx = 0, bz = 0, blocks = null) {
             let depth = 0;
             for (let y = y1; y >= 0; y--) {
 
-                if (!data.superflat) {
+                if (mode == "normal") {
                     let result = ChaosHills.generate(x1, y, z1);
                     if (!result) {
                         depth = 0;
@@ -60,13 +74,19 @@ function Generate(cx, cz, bx = 0, bz = 0, blocks = null) {
                 }
                 
                 // Resource height map
-                let type = depthMap(depth, y, x1, y1);
+                let type = depthMap(mode, depth, y, x1, y, z1);
+                
+                if (!type) {
+                    depth = 0;
+                    continue;
+                }
+                
                 depth++;
 
                 // Spawning trees
-                if (data.superflat) {
+                if (mode == "superflat") {
                     // type = superflatMap(x, y, z, e, r);
-                } else {
+                } else if (mode == "normal") {
                     if (type == "grass") {
                         let rnd = rand();
                         const FREQ = 0.01;
@@ -91,7 +111,16 @@ function Generate(cx, cz, bx = 0, bz = 0, blocks = null) {
     return blocks;
 }
 
-function depthMap(depth, elev, x, y) {
+function depthMap(mode, depth, elev, x, y, z) {
+
+    if (mode == "void") {
+        return "void_block";
+        // return "smooth_stone";
+        // return "black_grid_block";
+        // if (y == 40) return "glass";
+        // if ((Math.abs(x)+Math.abs(y)+Math.abs(z)) % 3 == 1) return null;
+        // else return "glass";
+    }
 
     if (elev < 4) {
         switch (elev) {

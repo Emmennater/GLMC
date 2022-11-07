@@ -33,6 +33,7 @@ function initCanvasElements() {
   }
   
   document.addEventListener("keydown", function(evt){ 
+
     let KEY = toConstFormat(evt.key);
     if (KEY == " ") KEY = "SPACE";
     
@@ -80,6 +81,7 @@ function initCanvasElements() {
   });
   
   document.addEventListener("keyup", function(evt){ 
+    data.keybusy = false;
     let KEY = toConstFormat(evt.key);
     if (KEY == " ") KEY = "SPACE";
     keys[KEY] = false;
