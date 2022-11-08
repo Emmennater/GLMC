@@ -6,5 +6,5 @@
 - left click: break
 - right click: place
 - middle click: pick block
-- o: toggle options
+- `: toggle options
 - zxc+scroll: zoom
