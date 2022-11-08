@@ -57,7 +57,7 @@ function initCanvasElements() {
       document.exitPointerLock();
     }
 
-    if (KEY == "O") {
+    if (KEY == "\`") {
       toggleInputVisibility();
     }
 

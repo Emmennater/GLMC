@@ -234,6 +234,13 @@ function map(x, a1, a2, b1, b2) {
     return ((x - a1) / a2) * b2 + b1;
 }
 
+function colToBin(r, g, b) {
+    r = Math.min(r, 255*0.99);
+    g = Math.min(g, 255*0.99);
+    b = Math.min(b, 255*0.99);
+    return (((b << 8) + g << 8) + r);
+}
+
 /*
 
 

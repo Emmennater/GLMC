@@ -536,6 +536,7 @@ class Player {
   }
 
   toggleGamemode() {
+    if (!focus) return;
     if (this.gamemode == "spectator") {
       let aux = this.gamemode;
       this.gamemode = this.pgamemode;

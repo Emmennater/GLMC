@@ -41,6 +41,8 @@ class Rect {
         // Iterate over all 6 sides
         for (let side=0; side<6; side++) {
     
+            let bincol = colToBin(this.col.r/2, this.col.g/2, this.col.b/2);
+
             // Iterate over vertices
             for (let j=0; j<4; j++) {
                 let vstart = 4*5*side + j * 5; // skip 5 attributes
@@ -54,6 +56,10 @@ class Rect {
                 u = 65/384;
                 v = 0;
 
+                // Calculate cx, cy
+                let cu = 1 - (j % 3 == 0); // 0, 1, 1, 0
+                let cv = 1 - Math.floor(j / 2); // 0, 0, 1, 1
+
                 // Push vertices
                 this.vertices.push(
                     CUBE_VERTICES[vstart+0] / 2 * this.l + this.x,
@@ -61,10 +67,12 @@ class Rect {
                     CUBE_VERTICES[vstart+2] / 2 * this.w + this.z,
                     u,
                     v,
-                    this.col.r,
-                    this.col.g,
-                    this.col.b,
-                    this.col.a,
+                    bincol,
+                    bincol,
+                    bincol,
+                    bincol,
+                    cu,
+                    cv,
                     0
                 );
             }

@@ -33,13 +33,17 @@ var vertexShaderSrc = `
 // Input variables
 attribute vec3 vertPosition;
 attribute vec2 vertTexCoord;
-attribute vec4 vertColor;
+attribute vec4 vertShadow;
+attribute vec2 vertShaCoord;
+// attribute vec4 vertColor;
 attribute float vertDoFog;
 
 // Output variables
 varying vec2 fragTexCoord;
 varying vec3 fragPosition;
-varying vec4 fragColor;
+varying vec4 fragShadow;
+varying vec2 fragShaCoord;
+// varying vec4 fragColor;
 varying float fragDoFog;
 varying float fragFog;
 
@@ -53,7 +57,9 @@ uniform vec3 uPos;
 void main() {
   fragTexCoord = vertTexCoord;
   fragPosition = vertPosition;
-  fragColor = vertColor;
+  fragShadow = vertShadow;
+  fragShaCoord = vertShaCoord;
+  // fragColor = vertColor;
   fragDoFog = vertDoFog;
   gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);
   
@@ -73,26 +79,68 @@ var fragmentShaderSrc = `
 
 varying vec2 fragTexCoord;
 varying vec3 fragPosition;
-varying vec4 fragColor;
+varying vec4 fragShadow;
+varying vec2 fragShaCoord;
+varying float fragDoFog;
+// varying vec4 fragColor;
 varying float fragFog;
 uniform sampler2D sampler;
 
+int modulo(int num, int divisor) {
+  return int(num - divisor * int(num / divisor));
+}
+
+vec3 binToCol(int bin) {
+  int r = modulo(bin, 256);
+  int g = modulo((bin / 256), 256);
+  return vec3(
+    float(r)/255.0 * 2.0,
+    float(g)/255.0 * 2.0,
+    float(int(bin / (256 * 256)))/255.0 * 2.0
+  );
+}
+
+float lerp(float a, float b, float c) {
+  return (1.0 - c) * a + b * c;
+}
+
 vec4 fog(vec4 color) {
-  float r = 0.0;; //0.57;
-  float g = 0.0;; //0.73;
-  float b = 0.0;; //0.98;
+  float r = 0.0; //0.57;
+  float g = 0.0; //0.73;
+  float b = 0.0; //0.98;
   color.r += (r - color.r) * fragFog;
   color.g += (g - color.g) * fragFog;
   color.b += (b - color.b) * fragFog;
   return color;
 }
 
+
+
 void main() {
   // vec4 vecFog = vec4(1, 1, 1, 1.0 - fragFog);
   vec4 color = texture2D(sampler, fragTexCoord);
   bool grass = !( color.g > color.r && color.g - color.b > 0.1 );
 
-  color = fog(color * fragColor); //  * vec4(1, grass, grass, 1)
+  // Shadow binary back to vec3
+  vec3 ftl = binToCol(int(fragShadow.x));
+  vec3 ftr = binToCol(int(fragShadow.y));
+  vec3 fbr = binToCol(int(fragShadow.z));
+  vec3 fbl = binToCol(int(fragShadow.w));
+
+  // Calculate color
+  vec3 l = mix(fbl, ftl, fragShaCoord.t);
+  vec3 r = mix(fbr, ftr, fragShaCoord.t);
+  vec3 c = mix(l,  r,    fragShaCoord.s);
+  
+  color = vec4(
+    color.x * c.x * c.x,
+    color.y * c.y * c.y,
+    color.z * c.z * c.z,
+    color.w * (fragDoFog + 0.1)
+  );
+
+  color = fog(color); //  * vec4(1, grass, grass, 1)
+  // color = c;
   if (color.a == 0.0) discard;
 
   gl_FragColor = color;

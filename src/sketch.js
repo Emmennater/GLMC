@@ -51,7 +51,14 @@ var initProgram = async function() {
   buffers.push(drawBuffer);
   drawBuffer.culling = false;
   
+  // Setup matrices
   matrices = setupMatricies();
+
+  // Setup attributes
+  // for (let i=0; i<buffers.length; i++) {
+  //   buffers[i].setUsing(gl);
+  //   setupVertexAttribs();
+  // }
 
   // Render loop
   var angle = 0;
@@ -73,7 +80,7 @@ var initProgram = async function() {
     drawBuffer.reset(gl);
 
     // Player actions
-    if (!data.busy && !data.keybusy) {
+    if (!data.busy && !data.keybusy && focus) {
       player.look();
       player.move();
       player.use();
@@ -109,7 +116,6 @@ var initProgram = async function() {
       // Bind the buffers
       buffers[i].setUsing(gl);
 
-      // Setup attributes
       setupVertexAttribs();
 
       // Back face culling

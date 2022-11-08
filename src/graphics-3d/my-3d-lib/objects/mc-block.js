@@ -65,9 +65,27 @@ class CubeHandler {
         for (let side = 0; side < 6; side++) {
             if (block.bits && !(block.bits & 2 ** side)) continue;
 
+            let colors = [0, 0, 0, 0];
+            
+            // Calculate shade
+            let shade = 0.5 - (side / 6) / 2 + 0.5;
+            if (glow != null) shade = 1;
+
+            // We need to calculate the color here first now
+            for (let vert = 0; vert < 4; vert++) {
+                let shadow = calcShadow(block, x, y, z, side, vert, glow);
+
+                // Append vertices
+                colors[vert] = colToBin(
+                    Math.floor(shade * shadow.r * color[0] * COL[0] * 255 / 2),
+                    Math.floor(shade * shadow.g * color[1] * COL[1] * 255 / 2),
+                    Math.floor(shade * shadow.b * color[2] * COL[2] * 255 / 2)
+                );
+            }
+
             // Iterate over vertices
             for (let vert = 0; vert < 4; vert++) {
-                CubeVertexHandler.buildVertex(vertices, block, x, y, z, side, vert, glow, txr, color, COL);
+                CubeVertexHandler.buildVertex(vertices, x, y, z, side, vert, txr, colors);
             }
 
             // Append indices
@@ -152,7 +170,7 @@ class CubeVertexHandler {
         return 0;
     }
 
-    static buildVertex(vtArray, block, x, y, z, side, vert, glow, txr, color, COL) {
+    static buildVertex(vtArray, x, y, z, side, vert, txr, col) {
         let vstart = 4 * 5 * side + vert * 5; // skip 5 attributes
 
         // Calculate texture coordinates
@@ -161,22 +179,17 @@ class CubeVertexHandler {
         let u = (CUBE_VERTICES[vstart + 3] + U) / TXRW;
         let v = (CUBE_VERTICES[vstart + 4] + V) / TXRH;
 
-        // Calculate shade
-        let shade = 0.5 - (side / 6) / 2 + 0.5;
+        // Calculate positon
         let X = CUBE_VERTICES[vstart + 0] / 2 * BLOCKL + x;
         let Y = CUBE_VERTICES[vstart + 1] / 2 * BLOCKW + y;
         let Z = CUBE_VERTICES[vstart + 2] / 2 * BLOCKH + z;
 
-        let shadow = calcShadow(block, x, y, z, side, vert, glow);
+        // Calculate cx, cy
+        let cu = 1 - (vert % 3 == 0); // 0, 1, 1, 0
+        let cv = 1 - Math.floor(vert / 2); // 0, 0, 1, 1
 
-        // Append vertices
-        vtArray.push(
-            X, Y, Z, u, v,
-            shade * shadow.r * color[0] * COL[0],
-            shade * shadow.g * color[1] * COL[1],
-            shade * shadow.b * color[2] * COL[2],
-            1, 1
-        );
+        // Append vertices [x, y, z, u, v, tl, tr, br, bl, cu, cv, dofog]
+        vtArray.push(X, Y, Z, u, v, col[0], col[1], col[2], col[3], cu, cv, 1);
     }
 
 }

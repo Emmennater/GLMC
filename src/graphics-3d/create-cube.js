@@ -313,11 +313,18 @@ function getColor(block) {
       color = [0.8, 0.8, 0.8];
   }
 
+  // Color balancing
+  color = [
+    (color[0] + 1) / 2,
+    (color[1] + 1) / 2,
+    (color[2] + 1) / 2
+  ];
+
   return color;
 }
 
 function getShadow(block) {
-  let v = 0.75;
+  let v = 0.5;
   switch (block) {
     case "void_block":
       return {
@@ -616,8 +623,10 @@ function calcShadow(block, x, y, z, side, vt, glow) {
   // if (vt == 1) shadow -= amt/4*2;
   // if (vt == 2) shadow -= amt/4*3;
   // if (vt == 3) shadow -= amt/4*1;
+  
+  // Color balancing
+  shadow -= count / 5 / 2;
 
-  shadow -= count / 5;
   shadow = constrain(shadow, 0, 1);
   // if (count < 0) shadow = 2;
 
