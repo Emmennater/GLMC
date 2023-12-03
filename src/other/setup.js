@@ -33,7 +33,8 @@ function setupData() {
   // https://i.ibb.co/k26xTvB/atlas.png
   // https://i.ibb.co/ryH5Qkk/atlas.png
   // https://i.ibb.co/VtYkW1b/atlas.png
-  data.atlasLink = "https://i.ibb.co/rcQKXkt/atlas.png";
+  // data.atlasLink = "https://i.ibb.co/rcQKXkt/atlas.png";
+  data.atlasLink = "https://github.com/Emmennater/GLMC/blob/main/assets/atlas.png";
 
   /** LAZY CHUNKS **/
   LazyChunk = null;
