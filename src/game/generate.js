@@ -1,10 +1,8 @@
 function Generate(cx, cz, bx = 0, bz = 0, blocks = null) {
 
-    let mode = data.superflat ? "superflat" : "normal";
+    let mode = data.mode;
     let cxoff = cx * LENGTH;
     let czoff = cz * WIDTH;
-
-    mode = "void";
 
     if (blocks == null) {
         blocks = [];

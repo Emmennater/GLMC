@@ -199,9 +199,10 @@ function saveWorld(logit = true) {
   
   var arr = Object.keys(data.blockEdits).map((key) => [data.blockEdits[key]]);
   let output = JSON.stringify({
-    version: "1.0",
+    version: "1.1",
     seed: seedPhrase,
-    superflat: data.superflat,
+    mode: data.mode,
+    pos: { x : player.pos.x, y: player.pos.y, z: player.pos.z },
     blocks: arr.flat(2)
   });
   if (logit)
@@ -216,7 +217,10 @@ function loadWorld(string) {
 
   let input = JSON.parse(string);
   seedPhrase = input.seed;
-  data.superflat = input.superflat;
+  data.mode = input.mode;
+  player.x = input.pos.x;
+  player.y = input.pos.y;
+  player.z = input.pos.z;
   let blocks = input.blocks;
   for (let i=0; i<blocks.length; i+= 4) {
     pushQueue(blocks[i], blocks[i+1],blocks[i+2], blocks[i+3]);

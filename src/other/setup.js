@@ -22,11 +22,16 @@ function setupData() {
   data.fps = 0;
   settings.fog = true;
   settings.hand = "right";
-  data.superflat = false;
+  data.mode = "normal";
   data.updateFps = 0;
   data.blockEdits = {};
   data.busy = false;
   data.keybusy = false;
+
+  /** PLAYER DATA */
+  player.x = 0;
+  player.y = 80;
+  player.z = 0;
 
   // olds:
   // https://i.ibb.co/KFMNywR/atlas2.png

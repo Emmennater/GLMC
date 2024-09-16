@@ -68,7 +68,8 @@ class CubeHandler {
             let colors = [0, 0, 0, 0];
             
             // Calculate shade
-            let shade = 0.5 - (side / 6) / 2 + 0.5;
+            const STRENGTH = 1 / 24;
+            let shade = 1 - side * STRENGTH;
             if (glow != null) shade = 1;
 
             // We need to calculate the color here first now

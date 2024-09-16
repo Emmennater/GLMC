@@ -105,9 +105,9 @@ float lerp(float a, float b, float c) {
 }
 
 vec4 fog(vec4 color) {
-  float r = 0.0; //0.57;
-  float g = 0.0; //0.73;
-  float b = 0.0; //0.98;
+  float r = 0.57; // 0.0;
+  float g = 0.73; // 0.0;
+  float b = 0.98; // 0.0;
   color.r += (r - color.r) * fragFog;
   color.g += (g - color.g) * fragFog;
   color.b += (b - color.b) * fragFog;

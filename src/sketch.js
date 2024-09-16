@@ -9,13 +9,14 @@ var initProgram = async function() {
   
   await sleep(100);
   
+  /** PLAYER **/
+  player = new Player(8, 0+2, 8);
+  player.flying = false;
+  
   setupData();
 
   setupElements();
 
-  /** PLAYER **/
-  player = new Player(8, 0+2, 8);
-  player.flying = false;
   itemBox.value = player.itemSelected;
 
   // Draw hotbar
@@ -33,8 +34,8 @@ var initProgram = async function() {
 
   // Sky color
   sky = "#91b9fa";
-  // sky = [145, 185, 250];
-  sky = [0, 0, 0];
+  sky = [145, 185, 250];
+  // sky = [0, 0, 0];
   sky = {r:sky[0]/255, g:sky[1]/255, b:sky[2]/255};
   
   /** CREATE BUFFERS **/
