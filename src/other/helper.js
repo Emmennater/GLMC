@@ -202,7 +202,7 @@ function saveWorld(logit = true) {
     version: "1.1",
     seed: seedPhrase,
     mode: data.mode,
-    pos: { x : player.pos.x, y: player.pos.y, z: player.pos.z },
+    pos: { x : player.x, y: player.y, z: player.z },
     blocks: arr.flat(2)
   });
   if (logit)
