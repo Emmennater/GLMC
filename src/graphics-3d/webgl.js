@@ -170,7 +170,8 @@ function createTextures() {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
   }
 
-  img.src = data.atlasLink + "?not-from-cache-please";
+  // img.src = data.atlasLink + "?not-from-cache-please";
+  img.src = data.atlasLink;
   textures = img;
   
   // gl.activeTexture(gl.TEXURE0);
