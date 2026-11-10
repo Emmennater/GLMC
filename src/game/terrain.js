@@ -18,7 +18,7 @@
  */
 
 const TREE_FREQUENCY = 0.01; // chance of a tree on each grass block
-const STONE_HEIGHT = 150; // height where grass gives way to stone
+const STONE_HEIGHT = 256; // height where grass gives way to stone
 const STONE_VARIATION = 3; // how far the stone line wanders up and down
 
 const TERRAINS = {
@@ -146,9 +146,13 @@ class Biome {
 
 class ChaosHills extends Biome {
   static density(x, y, z) {
-    // y *= 0.5;
-    let value = noise.simplex3(x / 50, z / 50, y / 50) - 1;
-    value += noise.simplex3(x / 25 + 10, z / 25 + 20, y / 25 + 30) ** 2 - 1;
+    let value = 0;
+    y *= 0.25;
+    x *= 0.5;
+    z *= 0.5;
+    value += ((noise.simplex3(x / 50, z / 50, y / 250) + 1) ** 0.1) * 5 - 4;
+    value += (noise.simplex3(x / 50 + 10, z / 50 + 20, y / 25 + 30) ** 2) - 1;
+    value += (noise.simplex3(x / 15 + 10, z / 15 + 20, y / 15 + 30) ** 4) - 1;
     value += y / 20;
     return value - 1.0; // solid where value <= 1
   }

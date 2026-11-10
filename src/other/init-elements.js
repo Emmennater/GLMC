@@ -1,3 +1,16 @@
+const SPIKE_MIN = 150; // movement per event below this is never treated as a spike
+const SPIKE_RATIO = 6; // how many times recent movement an event must be to count as a spike
+
+/**
+ * Check whether a mouse movement is a spurious jump rather than real movement.
+ * Real movement speeds up over several events, while spikes appear at once.
+ * @param {number} size Distance moved in this event
+ * @param {number} average Recent distance moved per event
+ * @returns {boolean} Whether to ignore the movement
+ */
+function isMovementSpike(size, average) {
+  return size > SPIKE_MIN && size > SPIKE_RATIO * (average + 5);
+}
 
 function initCanvasElements() {
     // Initiliaze Input
@@ -15,21 +28,36 @@ function initCanvasElements() {
   document.addEventListener('pointerlockchange', lockChangeAlert, false);
   document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 
+  let averageMovement = 0; // recent movement per event, for spotting spikes
+  let skipNextMovement = false;
+
   function lockChangeAlert() {
     focus = (document.pointerLockElement === TOPCANVAS ||
     document.mozPointerLockElement === TOPCANVAS);
     if (focus) {
+      // The first movement after locking can carry the jump from where the cursor was
+      skipNextMovement = true;
+      averageMovement = 0;
       document.addEventListener("mousemove", canvasLoop, false);
     } else {
       document.removeEventListener("mousemove", canvasLoop, false);
     }
   }
-  
+
+  // Add up the movement between frames, since the mouse reports many times per frame
   function canvasLoop(e) {
     var movementX = e.movementX || e.mozMovementX || 0;
     var movementY = e.movementY || e.mozMovementY ||  0;
-    moveX = movementX;
-    moveY = movementY;
+    var size = Math.hypot(movementX, movementY);
+
+    if (skipNextMovement || isMovementSpike(size, averageMovement)) {
+      skipNextMovement = false;
+      return;
+    }
+
+    averageMovement += (size - averageMovement) * 0.2;
+    moveX += movementX;
+    moveY += movementY;
   }
   
   document.addEventListener("keydown", function(evt){ 

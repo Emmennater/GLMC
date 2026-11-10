@@ -9,7 +9,7 @@ function setupData() {
   TOPCANVAS = null;
   data = {};
   settings = {};
-  data.renderDistance = 8;
+  data.renderDistance = 12;
   data.renderedChunks = 0;
   data.fogDist = 10;
   data.renderedChunks = [];

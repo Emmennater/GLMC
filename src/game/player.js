@@ -22,7 +22,7 @@ class Player {
     this.DYNAMIC_FOV = this.FOV;
     this.viewVector = [0, 0, 0];
     
-    this.sensitivity = 20;
+    this.sensitivity = 0.002; // radians turned per unit of mouse movement
     this.reach = 4;
     this.terminalVel = 79 / 60;
     this.gravity = 0.5 / 60;
@@ -51,8 +51,8 @@ class Player {
   look() {
     // Mouse
     if (focus) {
-      this.xRot += moveX * this.sensitivity * 0.2 / canvas.width;
-      this.yRot += moveY * this.sensitivity * 0.2 / canvas.height;
+      this.xRot += moveX * this.sensitivity;
+      this.yRot += moveY * this.sensitivity;
     }
     
     this.yRot = Math.min(Math.max(this.yRot, -Math.PI/2), Math.PI/2);
