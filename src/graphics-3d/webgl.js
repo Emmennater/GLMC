@@ -276,6 +276,29 @@ class Buffer {
     this.setIndices(gl, this.indices);
   }
 
+  /**
+   * Send typed vertex and index data to the GPU without keeping a copy
+   * @param {WebGLRenderingContext} gl WebGL context
+   * @param {Float32Array} vertices Vertex data
+   * @param {Uint32Array} indices Index data
+   */
+  upload(gl, vertices, indices) {
+    this.setUsing(gl);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+  }
+
+  /**
+   * Free the buffer's GPU memory
+   * @param {WebGLRenderingContext} gl WebGL context
+   */
+  destroy(gl) {
+    gl.deleteBuffer(this.vertexBuffer);
+    gl.deleteBuffer(this.indexBuffer);
+    this.vertexBuffer = null;
+    this.indexBuffer = null;
+  }
+
 }
 
 /*

@@ -1,7 +1,5 @@
 function setupData() {
   /** CHUNK **/
-  BlockQueue = {};
-  Blocks = {};
   Chunks = {};
   LENGTH = 16;
   WIDTH = 16;
@@ -24,7 +22,7 @@ function setupData() {
   settings.hand = "right";
   data.mode = "normal";
   data.updateFps = 0;
-  data.blockEdits = {};
+  data.edits = new ChunkEdits();
   data.busy = false;
   data.keybusy = false;
 
@@ -43,7 +41,7 @@ function setupData() {
   data.atlasLink = "./assets/atlas.png";
 
   /** LAZY CHUNKS **/
-  LazyChunk = null;
+  ChunkJob = null; // chunk whose generation is spread over several frames
   TotalBlockGen = 0;
   MaxBlockGen = 5000;
   VertexWaitTime = 50;
@@ -95,7 +93,6 @@ function setupElements() {
 
   loadButton = document.getElementById("loadworld");
   loadButton.onclick = function () {
-    BlockQueue = [];
     loadWorld(loadBox.value.replaceAll('\\', ''));
   }
 

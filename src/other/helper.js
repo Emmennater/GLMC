@@ -195,25 +195,31 @@ function roughSizeOfObject( object ) {
   return bytes;
 }
 
+/**
+ * Save the world's seed, settings and the player's edits
+ * @param {boolean} logit Whether to log the save instead of downloading it
+ */
 function saveWorld(logit = true) {
-  
-  var arr = Object.keys(data.blockEdits).map((key) => [data.blockEdits[key]]);
-  let output = JSON.stringify({
-    version: "1.1",
+  const save = createSaveData({
     seed: seedPhrase,
     mode: data.mode,
-    pos: { x : player.x, y: player.y, z: player.z },
-    blocks: arr.flat(2)
-  });
-  if (logit)
-    console.log(output.replaceAll("\"", "\\\""));
-  else
-    download("NewWorld.glmc", output.replaceAll("\"", "\\\""))
+    pos: { x: player.x, y: player.y, z: player.z }
+  }, data.edits);
+
+  const output = JSON.stringify(save).replaceAll('"', '\\"');
+
+  if (logit) console.log(output);
+  else download('NewWorld.glmc', output);
 }
 
+/**
+ * Replace the current world with a saved one
+ * @param {string} string Save file contents
+ */
 function loadWorld(string) {
 
   clearWorld();
+  data.edits.clear();
 
   let input = JSON.parse(string);
   seedPhrase = input.seed;
@@ -221,11 +227,9 @@ function loadWorld(string) {
   player.x = input.pos.x;
   player.y = input.pos.y;
   player.z = input.pos.z;
-  let blocks = input.blocks;
-  for (let i=0; i<blocks.length; i+= 4) {
-    pushQueue(blocks[i], blocks[i+1],blocks[i+2], blocks[i+3]);
-    saveChange(blocks[i], blocks[i+1],blocks[i+2], blocks[i+3]);
-  }
+
+  for (const { cx, cz, index, type } of readSaveEdits(input))
+    data.edits.loadBlock(cx, cz, index, getBlockTypeId(type));
 
   // Update seeds
   seed = cyrb128(""+seedPhrase);
@@ -248,12 +252,12 @@ function download(filename, text) {
   }
 }
 
+/**
+ * Free every loaded chunk and stop any chunk being generated
+ */
 function clearWorld() {
-  LazyChunk = null;
-  Chunks = {};
-  BlockQueue = {};
-  Blocks = {};
-  // data.blockEdits = {};
+  unloadAllChunks();
+  ChunkJob = null;
   data.renderedChunks = [];
 }
 
