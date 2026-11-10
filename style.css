@@ -44,6 +44,19 @@ img {
   margin-left: -3px;
 }
 
+/* GUI hidden with F1. The top canvas is only made invisible, since clicking
+   it is what locks the pointer. */
+.gui-hidden #gui,
+.gui-hidden #web2d,
+.gui-hidden .center {
+  opacity: 0;
+}
+
+.gui-hidden input,
+.gui-hidden button {
+  display: none;
+}
+
 input, button {
   z-index: 3;
   width: 180px;

@@ -100,6 +100,12 @@ function initCanvasElements() {
       toggleInputVisibility();
     }
 
+    // Hide the GUI, like F1 in Minecraft, instead of opening the browser's help
+    if (KEY == "F1") {
+      evt.preventDefault();
+      toggleGui();
+    }
+
     let index = null;
     // console.log(KEY);
     switch (KEY) {

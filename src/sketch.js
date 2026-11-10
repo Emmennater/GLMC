@@ -23,21 +23,13 @@ var initProgram = async function() {
   initWebgl2D();
   initWebgl();
   sceneTarget = new SceneTarget(gl);
+  sky = new Sky(gl);
+  clouds = new Clouds(gl);
   initGui();
   createTextures();
   initCanvasElements();
 
   canvasResize(canvas, gl);
-  
-  /** CREATE CUBES **/
-  
-  
-
-  // Sky color
-  sky = "#91b9fa";
-  sky = [145, 185, 250];
-  // sky = [0, 0, 0];
-  sky = {r:sky[0]/255, g:sky[1]/255, b:sky[2]/255};
   
   /** CREATE BUFFERS **/
   buffers = [];
@@ -96,8 +88,12 @@ var initProgram = async function() {
     // Intro
     animateIntro();
 
-    // Clear to the sky, off screen when anti-aliasing
-    sceneTarget.begin(settings.ssaa, settings.msaa, sky);
+    // Start the frame, off screen when anti-aliasing
+    sceneTarget.begin(settings.ssaa, settings.msaa, SKY_HORIZON_COLOR);
+
+    // Sky and clouds behind the world
+    sky.draw(matrices.view, matrices.proj);
+    clouds.draw(matrices.view, matrices.proj, player.getEyePosition(), now);
 
     drawBuffer.setAttributes(gl);
     renderFog(gl);

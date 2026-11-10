@@ -4,6 +4,42 @@
  * sent to GPU
  */
 
+const SKY_HORIZON_COLOR = [145 / 255, 185 / 255, 250 / 255]; // light blue at the horizon
+const SKY_ZENITH_COLOR = [60 / 255, 115 / 255, 245 / 255]; // saturated blue straight up
+// Heights of a view direction, from -1 straight down through 0 at the horizon
+// to 1 straight up, where the sky starts and finishes turning to its zenith color
+const SKY_GRADIENT_START = -0.4;
+const SKY_GRADIENT_END = 0.7;
+const CLOUD_OPACITY = 0.7;
+
+/**
+ * Format a color as a GLSL vec3
+ * @param {number[]} color Red, green and blue from 0 to 1
+ * @returns {string} GLSL vec3
+ */
+function toGlslVec3(color) {
+  return `vec3(${color.map(channel => channel.toFixed(4)).join(', ')})`;
+}
+
+// The most precise floats fragment shaders on this device can use
+var fragmentPrecisionSrc = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+  precision highp float;
+#else
+  precision mediump float;
+#endif
+`;
+
+// Color of the sky in a direction. Fog uses it too, so distant blocks fade
+// into the part of the sky behind them.
+var skyColorSrc = `
+vec3 skyColor(vec3 direction) {
+  float height = direction.y / max(length(direction), 0.0001);
+  float zenith = smoothstep(${SKY_GRADIENT_START.toFixed(4)}, ${SKY_GRADIENT_END.toFixed(4)}, height);
+  return mix(${toGlslVec3(SKY_HORIZON_COLOR)}, ${toGlslVec3(SKY_ZENITH_COLOR)}, zenith);
+}
+`;
+
 var blockVertexShaderSrc = `
 attribute vec3  aVertex;
 attribute vec2  aTexture;
@@ -46,6 +82,7 @@ varying vec2 fragShaCoord;
 // varying vec4 fragColor;
 varying float fragDoFog;
 varying float fragFog;
+varying vec3 fragView; // from the eye to the vertex
 
 // Global variables
 uniform mat4 mWorld;
@@ -61,6 +98,7 @@ void main() {
   fragShaCoord = vertShaCoord;
   // fragColor = vertColor;
   fragDoFog = vertDoFog;
+  fragView = vertPosition - uPos;
   gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);
   
   // Calculate fog (credit: minekhan)
@@ -76,11 +114,7 @@ const ALPHA_TEST = 1; // drawn solid or not at all, for opaque and cutout blocks
 const ALPHA_COVERAGE = 2; // decides how many of a pixel's samples are covered, for cutout blocks with MSAA
 
 var fragmentShaderSrc = `
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-  precision highp float;
-#else
-  precision mediump float;
-#endif
+${fragmentPrecisionSrc}
 
 CENTROID varying vec2 fragTexCoord;
 varying vec3 fragPosition;
@@ -89,6 +123,7 @@ varying vec2 fragShaCoord;
 varying float fragDoFog;
 // varying vec4 fragColor;
 varying float fragFog;
+varying vec3 fragView;
 uniform sampler2D sampler;
 uniform int uAlphaMode;
 
@@ -110,13 +145,10 @@ float lerp(float a, float b, float c) {
   return (1.0 - c) * a + b * c;
 }
 
+${skyColorSrc}
+
 vec4 fog(vec4 color) {
-  float r = 0.57; // 0.0;
-  float g = 0.73; // 0.0;
-  float b = 0.98; // 0.0;
-  color.r += (r - color.r) * fragFog;
-  color.g += (g - color.g) * fragFog;
-  color.b += (b - color.b) * fragFog;
+  color.rgb = mix(color.rgb, skyColor(fragView), fragFog);
   return color;
 }
 
@@ -201,11 +233,7 @@ void main() {
 `;
 
 var downsampleFragmentShaderSrc = `
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-  precision highp float;
-#else
-  precision mediump float;
-#endif
+${fragmentPrecisionSrc}
 
 const int MAX_FACTOR = ${MAX_SSAA_FACTOR};
 
@@ -229,5 +257,74 @@ void main() {
 
   sum /= float(uFactor * uFactor);
   gl_FragColor = vec4(pow(sum.rgb, vec3(1.0 / 2.2)), sum.a);
+}
+`;
+
+/**
+ * Sky: one triangle covers the screen, and each pixel is colored by the
+ * direction it looks in
+ */
+
+var skyVertexShaderSrc = `
+attribute vec2 aPosition;
+
+uniform mat4 uInverseViewProjection; // from clip space back to view directions, ignoring where the eye is
+
+varying vec3 vDirection;
+
+void main() {
+  // Points on the far plane all have the same positive w, so xyz alone points the right way
+  vDirection = (uInverseViewProjection * vec4(aPosition, 1.0, 1.0)).xyz;
+  gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+`;
+
+var skyFragmentShaderSrc = `
+${fragmentPrecisionSrc}
+
+varying vec3 vDirection;
+
+${skyColorSrc}
+
+void main() {
+  gl_FragColor = vec4(skyColor(vDirection), 1.0);
+}
+`;
+
+/**
+ * Clouds: white boxes shaded per side, fading out with distance
+ */
+
+var cloudVertexShaderSrc = `
+attribute vec3 aPosition;
+attribute float aShade;
+
+uniform mat4 uView;
+uniform mat4 uProjection;
+uniform vec2 uEye; // x and z of the eye
+uniform float uDrift; // blocks the clouds have moved along x
+
+varying vec2 vOffset; // horizontal offset from the eye
+varying float vShade;
+
+void main() {
+  vec3 position = aPosition + vec3(uDrift, 0.0, 0.0);
+  vOffset = position.xz - uEye;
+  vShade = aShade;
+  gl_Position = uProjection * uView * vec4(position, 1.0);
+}
+`;
+
+var cloudFragmentShaderSrc = `
+${fragmentPrecisionSrc}
+
+uniform vec2 uFade; // distances where clouds start and finish fading out
+
+varying vec2 vOffset;
+varying float vShade;
+
+void main() {
+  float fade = 1.0 - smoothstep(uFade.x, uFade.y, length(vOffset));
+  gl_FragColor = vec4(vec3(vShade), ${CLOUD_OPACITY.toFixed(4)} * fade);
 }
 `;

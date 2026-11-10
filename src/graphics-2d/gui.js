@@ -31,6 +31,14 @@ function initGui() {
     }));
 }
 
+/**
+ * Show or hide the GUI: the hand, hotbar, crosshair, debug text and inputs
+ */
+function toggleGui() {
+    settings.hideGui = !settings.hideGui;
+    document.body.classList.toggle('gui-hidden', settings.hideGui);
+}
+
 function animateIntro() {
     return;
     if (data.introTime <= 0) return;

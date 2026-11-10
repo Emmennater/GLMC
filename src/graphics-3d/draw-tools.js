@@ -126,6 +126,6 @@ function renderFog(gl) {
     let dist = (data.furthestChunk / 2) * 16;
     if (dist) data.fogDist = lerp(data.fogDist || 0, dist, 0.1);
     if (!settings.fog) data.fogDist = 1000000;
-    gl.uniform3f(glCache.uPos, player.x, player.y, player.z);
+    gl.uniform3fv(glCache.uPos, player.getEyePosition());
     gl.uniform1f(glCache.uDist, data.fogDist);
 }

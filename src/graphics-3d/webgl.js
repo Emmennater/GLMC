@@ -113,6 +113,30 @@ function createProgramObject(gl, vertexShaderSrc, fragmentShaderSrc) {
   return program;
 }
 
+/**
+ * Create a buffer holding one triangle larger than the screen, so drawing it
+ * covers every pixel once
+ * @param {WebGLRenderingContext} gl WebGL context
+ * @returns {WebGLBuffer} Buffer of 2D clip space positions
+ */
+function createScreenTriangle(gl) {
+  const triangle = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, triangle);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  return triangle;
+}
+
+/**
+ * Disable every vertex attribute array, before a program with other
+ * attributes than the blocks' sets up its own. The blocks set theirs up again
+ * before each draw.
+ * @param {WebGLRenderingContext} gl WebGL context
+ */
+function disableVertexAttribs(gl) {
+  const count = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
+  for (let i = 0; i < count; i++) gl.disableVertexAttribArray(i);
+}
+
 function setupVertexAttribs() {
   var vertexSize = 12; // 10
   var totalSize = vertexSize * Float32Array.BYTES_PER_ELEMENT;
@@ -290,7 +314,8 @@ function updateMatricies() {
   mat4.identity(matrices.view);
   mat4.rotateX(matrices.view, matrices.view, player.yRot);   
   mat4.rotateY(matrices.view, matrices.view, player.xRot);   
-  mat4.translate(matrices.view, matrices.view, [-player.x, -player.y-player.h+0.8, -player.z]);
+  const eye = player.getEyePosition();
+  mat4.translate(matrices.view, matrices.view, [-eye[0], -eye[1], -eye[2]]);
   gl.uniformMatrix4fv(matrices.viewUniform, gl.FALSE, matrices.view);
 }
 

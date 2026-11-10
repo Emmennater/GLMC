@@ -20,7 +20,6 @@ class SceneTarget {
     this._sceneUniform = gl.getUniformLocation(this._program, 'uScene');
     this._sizeUniform = gl.getUniformLocation(this._program, 'uSceneSize');
     this._factorUniform = gl.getUniformLocation(this._program, 'uFactor');
-    this._attributeCount = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
     this._maxSamples = this._webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 0;
 
     // Largest target the GPU can draw to, in texels
@@ -29,10 +28,7 @@ class SceneTarget {
     this._maxWidth = Math.min(largest, viewport[0]);
     this._maxHeight = Math.min(largest, viewport[1]);
 
-    // One triangle larger than the screen, so every pixel is drawn once
-    this._triangle = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._triangle);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    this._triangle = createScreenTriangle(gl);
 
     this._supersampled = null; // {framebuffer, texture, depth, width, height, samples: 0}
     this._multisampled = null; // {framebuffer, color, depth, width, height, samples}
@@ -82,7 +78,7 @@ class SceneTarget {
    * a translucent block or a partly covered MSAA sample wrote a lower alpha.
    * @param {number} factor Supersamples per pixel along each axis, 1 for off
    * @param {number} samples Multisamples per pixel, 0 for off
-   * @param {{r: number, g: number, b: number}} sky Color to clear to
+   * @param {number[]} sky Red, green and blue from 0 to 1 to clear to
    */
   begin(factor, samples, sky) {
     const gl = this._gl;
@@ -107,7 +103,7 @@ class SceneTarget {
     gl.viewport(0, 0, sceneWidth, sceneHeight);
 
     gl.colorMask(true, true, true, true);
-    gl.clearColor(sky.r, sky.g, sky.b, 1.0);
+    gl.clearColor(sky[0], sky[1], sky[2], 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.colorMask(true, true, true, false);
   }
@@ -141,8 +137,8 @@ class SceneTarget {
     gl.disable(gl.BLEND);
     gl.disable(gl.CULL_FACE);
 
-    // Only the triangle's position is read; the scene's attributes are set again before each draw
-    for (let i = 0; i < this._attributeCount; i++) gl.disableVertexAttribArray(i);
+    // Only the triangle's position is read
+    disableVertexAttribs(gl);
     gl.bindBuffer(gl.ARRAY_BUFFER, this._triangle);
     gl.vertexAttribPointer(this._position, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(this._position);

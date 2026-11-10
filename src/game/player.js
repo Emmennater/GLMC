@@ -48,6 +48,14 @@ class Player {
     this.hitAnimation = 0;
   }
   
+  /**
+   * Get where the player sees from
+   * @returns {number[]} Eye position as [x, y, z]
+   */
+  getEyePosition() {
+    return [this.x, this.y + this.h - 0.8, this.z];
+  }
+
   look() {
     // Mouse
     if (focus) {
