@@ -30,7 +30,7 @@ function setupData() {
 
   /** PLAYER DATA */
   player.x = 0;
-  player.y = 80;
+  player.y = 255;
   player.z = 0;
 
   // olds:

@@ -131,7 +131,8 @@ function depthMap(mode, depth, elev, x, y, z) {
 
     
     // if (data.superflat) return "stone";
-    let stoneElev = 105 + noise.simplex2(x / 15 + 0.2, y / 15 + 0.4) * 3;
+    const stoneHeight = 105;
+    let stoneElev = stoneHeight + noise.simplex2(x / 15 + 0.2, y / 15 + 0.4) * 3;
 
     // Grassy
     if (elev < stoneElev) {
@@ -214,6 +215,9 @@ class Biome {
 
 class ChaosHills extends Biome {
     static generate(x, y, z) {
+        // x *= 0.2;
+        // y *= 0.5;
+        // z *= 0.2;
         let value = noise.simplex3(x/50, z/50, y/50) - 1;
         value += noise.simplex3(x/25+10, z/25+20, y/25+30) ** 2 - 1;
         value += (y / 20);
