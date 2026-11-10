@@ -64,7 +64,7 @@ const CUBE_INDICES = [
   22, 20, 23
 ];
 
-function getTextureArray(block) {
+function getTextureArray(block, solidLeaves = false) {
 
   // TOP, LEFT, RIGHT, FRONT, BACK, BOTTOM
   switch (block) {
@@ -131,9 +131,13 @@ function getTextureArray(block) {
     case "birch_log":
       return [23, 53, 22, 53, 22, 53, 22, 53, 22, 53, 23, 53];
     case "leaves":
-      return [144 / 16, 1136 / 16];
+      if (solidLeaves) 
+        return [160 / 16, 1136 / 16];
+      else return [144 / 16, 1136 / 16];
     case "birch_leaves":
-      return [3, 71];
+      if (solidLeaves)
+        return [4, 71];
+      else return [3, 71];
     case "glass":
       return [2, 63];
     case "black_concrete":

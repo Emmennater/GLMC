@@ -1,7 +1,3 @@
-const TEXTURE_WIDTH = 384; // px
-const TEXTURE_HEIGHT = 1520; // px
-const TXRW = TEXTURE_WIDTH / 16; // textures across the atlas
-const TXRH = TEXTURE_HEIGHT / 16; // textures down the atlas
 const SIDE_SHADE = 1 / 24; // how much darker each side is than the one before
 const WHITE = [1, 1, 1];
 

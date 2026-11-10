@@ -2,12 +2,15 @@
 function initWebgl() {
   // Initializing webgl
   canvas = document.getElementById('mycanvas');
-  gl = canvas.getContext('webgl', {
+  const options = {
       preserveDrawingBuffer: true,
       antialias: false,
       premultipliedAlpha: false
-  });
-  
+  };
+
+  // WebGL 2 allows mipmaps on the atlas, whose size isn't a power of two
+  gl = canvas.getContext('webgl2', options) || canvas.getContext('webgl', options);
+
   if (!gl) {
     console.log('webgl not supported, falling back on experimental');
     gl = canvas.getContext('experimental-webgl');
@@ -166,8 +169,12 @@ function createTextures() {
   img.alt = "txr";
   img.crossOrigin = "anonymous";
   img.onload = function() {
+    if (img.width !== TEXTURE_WIDTH || img.height !== TEXTURE_HEIGHT)
+      console.warn(`Atlas is ${img.width}x${img.height} but atlas.js expects ${TEXTURE_WIDTH}x${TEXTURE_HEIGHT}`);
+
     gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    uploadAtlasMipmaps(img);
   }
 
   // img.src = data.atlasLink + "?not-from-cache-please";
@@ -176,6 +183,33 @@ function createTextures() {
   
   // gl.activeTexture(gl.TEXURE0);
   gl.bindTexture(gl.TEXTURE_2D, null); // unbind texture
+}
+
+/**
+ * Upload the atlas's mip levels to the bound texture, so distant blocks are
+ * drawn from smaller copies instead of shimmering. Needs WebGL 2.
+ * @param {HTMLImageElement} img Loaded atlas image
+ */
+function uploadAtlasMipmaps(img) {
+  if (typeof WebGL2RenderingContext === 'undefined' || !(gl instanceof WebGL2RenderingContext)) return;
+
+  // Read the atlas's pixels
+  const pixels = document.createElement('canvas');
+  pixels.width = img.width;
+  pixels.height = img.height;
+  const context = pixels.getContext('2d', { willReadFrequently: true });
+  context.drawImage(img, 0, 0);
+
+  const levels = createAtlasMipmaps(context.getImageData(0, 0, img.width, img.height), ATLAS_TILE_SIZE);
+  levels.forEach((level, i) => {
+    gl.texImage2D(gl.TEXTURE_2D, i, gl.RGBA, level.width, level.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, level.data);
+  });
+
+  // Stop at one texel per tile, and sample a single level without blending.
+  // Blending levels would give cutouts like leaves half transparent edges,
+  // which hide whatever is drawn behind them later.
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, levels.length - 1);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
 }
 
 function setupMatricies() {

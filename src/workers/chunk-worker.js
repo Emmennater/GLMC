@@ -5,6 +5,7 @@ importScripts(
   '../other/math.js',
   '../graphics-3d/blocks.js',
   '../graphics-3d/create-cube.js',
+  '../graphics-3d/atlas.js',
   '../graphics-3d/mesh-builder.js',
   '../graphics-3d/chunk-mesher.js',
   '../game/block-registry.js',

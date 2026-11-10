@@ -30,10 +30,6 @@ class Rect {
             this.indices = buffer.indices;
         }
 
-        const TEXTURE_WIDTH = 384; //256;
-        const TEXTURE_HEIGHT = 1520; //944;
-        const TXRW = TEXTURE_WIDTH / 16;
-        const TXRH = TEXTURE_HEIGHT / 16;
         const TOTAL_SIDES = this.indices.length / 6;
         const TOTAL_VERTS = TOTAL_SIDES * 4;
         let totalVerts = 0;
@@ -53,7 +49,7 @@ class Rect {
                 let u = (CUBE_VERTICES[vstart+3] + U) / TXRW;
                 let v = (CUBE_VERTICES[vstart+4] + V) / TXRH;
 
-                u = 65/384;
+                u = 65/TEXTURE_WIDTH;
                 v = 0;
 
                 // Calculate cx, cy
