@@ -89,7 +89,8 @@ function generateColumn(job, x, z) {
   // y1 = floor(y1);
 
   let depth = 0;
-  for (let y = y1; y >= 0; y--) {
+  const START_Y = Math.min(y1, ChaosHills.MAX_HEIGHT);
+  for (let y = START_Y; y >= 0; y--) {
 
     if (mode == 'normal' && !ChaosHills.generate(x1, y, z1)) {
       depth = 0;
@@ -151,7 +152,8 @@ function depthMap(mode, depth, elev, x, y, z, random) {
   }
 
   // if (data.superflat) return "stone";
-  const stoneHeight = 105;
+  // const stoneHeight = 105;
+  const stoneHeight = 150;
   const stoneElev = stoneHeight + noise.simplex2(x / 15 + 0.2, y / 15 + 0.4) * 3;
 
   // Grassy
@@ -272,14 +274,13 @@ class Biome {
 }
 
 class ChaosHills extends Biome {
+  static MAX_HEIGHT = (4 * 20);
+
   static generate(x, y, z) {
-    // x *= 0.2;
     // y *= 0.5;
-    // z *= 0.2;
     let value = noise.simplex3(x / 50, z / 50, y / 50) - 1;
     value += noise.simplex3(x / 25 + 10, z / 25 + 20, y / 25 + 30) ** 2 - 1;
-    value += (y / 20);
-    value /= 2;
-    return (value <= 0.5);
+    value += y / 20;
+    return value <= 1.0;
   }
 }

@@ -14,7 +14,7 @@ function setupData() {
   data.fogDist = 10;
   data.waitTime = 0;
   data.renderedChunks = [];
-  data.chunkDelay = 1;
+  data.chunkDelay = 0.2;
   data.chunksGenerated = 0;
   data.dt = 0;
   data.fps = 0;
