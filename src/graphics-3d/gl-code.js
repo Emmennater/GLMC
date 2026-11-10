@@ -85,6 +85,7 @@ varying float fragDoFog;
 // varying vec4 fragColor;
 varying float fragFog;
 uniform sampler2D sampler;
+uniform float uCutout; // 1 while drawing opaque and cutout blocks
 
 int modulo(int num, int divisor) {
   return int(num - divisor * int(num / divisor));
@@ -120,6 +121,13 @@ void main() {
   // vec4 vecFog = vec4(1, 1, 1, 1.0 - fragFog);
   vec4 color = texture2D(sampler, fragTexCoord);
   bool grass = !( color.g > color.r && color.g - color.b > 0.1 );
+
+  // Cutout texels are either drawn solid or not at all, like Minecraft's
+  // cutout layer, so blended mipmap edges never hide what is behind them
+  if (uCutout > 0.5) {
+    if (color.a < 0.5) discard;
+    color.a = 1.0;
+  }
 
   // Shadow binary back to vec3
   vec3 ftl = binToCol(int(fragShadow.x));

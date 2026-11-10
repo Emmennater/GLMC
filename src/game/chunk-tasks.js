@@ -21,9 +21,10 @@ function runChunkTask(task) {
   }
 
   if (task.type === 'mesh') {
-    syncBlockTypes(task.blockTypes);
+    syncBlockTypes(task.blockTypes, task.blockLayers);
     const mesh = buildChunkMesh(task.area, task.X, task.Z);
-    return { result: mesh, transfer: [mesh.vertices.buffer, mesh.indices.buffer] };
+    const transfer = [mesh.solid, mesh.translucent].flatMap(part => [part.vertices.buffer, part.indices.buffer]);
+    return { result: mesh, transfer: transfer };
   }
 
   throw new Error(`Unknown chunk task '${task.type}'`);

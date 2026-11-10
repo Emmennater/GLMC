@@ -81,7 +81,8 @@ function advanceChunk(x, z) {
     }
   }
 
-  if (getChunkWorkers().hasCapacity() && frameBudget.canRun('request-mesh'))
+  // Meshes need to know which blocks are see-through, which comes from the atlas
+  if (hasBlockLayers() && getChunkWorkers().hasCapacity() && frameBudget.canRun('request-mesh'))
     frameBudget.run('request-mesh', () => requestMesh(chunk));
 }
 
@@ -119,6 +120,7 @@ function requestMesh(chunk) {
       X: chunk.X,
       Z: chunk.Z,
       blockTypes: getBlockTypeNames(),
+      blockLayers: getBlockLayers(),
       world: getWorldSettings()
     },
     (error, result) => finishedTasks.push({ name: 'upload', epoch: epoch, chunk: chunk, version: version, error: error, result: result })
@@ -142,7 +144,7 @@ function finishTasks(cx, cz, r) {
       // Leave the chunk marked as meshing so it isn't retried every frame
       console.error(`Meshing chunk ${task.chunk.x},${task.chunk.z} failed`, task.error);
     } else {
-      frameBudget.run('upload', () => task.chunk.setMesh(task.version, task.result.vertices, task.result.indices));
+      frameBudget.run('upload', () => task.chunk.setMesh(task.version, task.result));
     }
   }
 }
@@ -284,6 +286,11 @@ function renderChunks() {
   let cz = floor(player.z / WIDTH);
   let r = data.renderDistance;
   data.furthestChunk = 0;
+  const translucent = [];
+
+  // Opaque and cutout blocks: each texel is drawn solid or not at all, so
+  // they hide what is behind them correctly whatever order they are drawn in
+  gl.uniform1f(glCache.uCutout, 1);
 
   for (let x = -r + cx; x <= r + cx; x++) {
     for (let z = -r + cz; z <= r + cz; z++) {
@@ -296,6 +303,18 @@ function renderChunks() {
       if (d > data.furthestChunk) {
         data.furthestChunk = d;
       }
+
+      if (chunk.hasTranslucent()) translucent.push({ chunk: chunk, distance: d });
     }
   }
+
+  // Translucent blocks: blended over what is already drawn, furthest first,
+  // without hiding each other
+  gl.uniform1f(glCache.uCutout, 0);
+  gl.depthMask(false);
+
+  translucent.sort((a, b) => b.distance - a.distance);
+  for (const { chunk } of translucent) chunk.renderTranslucent();
+
+  gl.depthMask(true);
 }

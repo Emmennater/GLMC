@@ -372,28 +372,15 @@ function getShadow(block) {
   }
 }
 
-function isTransparent(block) {
-  switch (block) {
-    case "glass":
-      return true;
-    case "leaves":
-      return true;
-    case "birch_leaves":
-      return true;
-    default:
-      return false;
-  }
-}
-
+/**
+ * Check whether a block hides the faces of its own kind behind it. Leaves
+ * don't, so the inside of a tree shows through the gaps between leaves.
+ * Whether a block is see-through at all comes from its textures in the atlas.
+ * @param {string} block Block type
+ * @returns {boolean} Whether the block is solid
+ */
 function isSolid(block) {
-  switch (block) {
-    case "leaves":
-      return false;
-    case "birch_leaves":
-      return false;
-    default:
-      return true;
-  }
+  return !block.endsWith('leaves');
 }
 
 /*

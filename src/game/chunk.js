@@ -18,8 +18,8 @@ class Chunk {
     this.blocks = blocks;
     this.features = features;
     this.decorated = false;
-    this.buffer = null;
-    this.faces = 0;
+    this.solidMesh = null; // {buffer, faces} of opaque and cutout blocks, on the GPU
+    this.translucentMesh = null; // {buffer, faces} of translucent blocks, drawn after every solid mesh
     this.complete = false;
     this.calculating = false;
     this._meshVersion = 0; // bumped so meshes started earlier are ignored when they finish
@@ -44,15 +44,26 @@ class Chunk {
   }
 
   /**
-   * Draw the chunk's mesh
+   * Draw the chunk's opaque and cutout blocks
    */
   render() {
-    if (this.buffer == null || this.faces === 0) return;
-
-    this.buffer.setUsing(gl);
-    setupVertexAttribs();
-    gl.drawElements(gl.TRIANGLES, 6 * this.faces, gl.UNSIGNED_INT, 0);
+    this._drawMesh(this.solidMesh);
     data.renderedChunks++;
+  }
+
+  /**
+   * Draw the chunk's translucent blocks, after every chunk's solid blocks
+   */
+  renderTranslucent() {
+    this._drawMesh(this.translucentMesh);
+  }
+
+  /**
+   * Check whether the chunk has translucent blocks to draw
+   * @returns {boolean} Whether renderTranslucent draws anything
+   */
+  hasTranslucent() {
+    return this.translucentMesh != null;
   }
 
   /**
@@ -66,18 +77,16 @@ class Chunk {
   }
 
   /**
-   * Upload a built mesh to the GPU, unless the chunk changed or was freed
-   * since the mesh was started
+   * Upload built meshes to the GPU, unless the chunk changed or was freed
+   * since the meshes were started
    * @param {number} version Version from startMesh
-   * @param {Float32Array} vertices Vertex data
-   * @param {Uint32Array} indices Index data
+   * @param {{solid: Object, translucent: Object}} mesh Meshes from buildChunkMesh
    */
-  setMesh(version, vertices, indices) {
+  setMesh(version, mesh) {
     if (version !== this._meshVersion) return;
 
-    if (this.buffer == null) this.buffer = new Buffer();
-    this.buffer.upload(gl, vertices, indices);
-    this.faces = indices.length / 6;
+    this.solidMesh = this._uploadMesh(this.solidMesh, mesh.solid);
+    this.translucentMesh = this._uploadMesh(this.translucentMesh, mesh.translucent);
     this.calculating = false;
     this.complete = true;
   }
@@ -88,8 +97,7 @@ class Chunk {
    */
   buildMeshNow() {
     const version = this.startMesh();
-    const mesh = buildChunkMesh(createMeshArea(this), this.X, this.Z);
-    this.setMesh(version, mesh.vertices, mesh.indices);
+    this.setMesh(version, buildChunkMesh(createMeshArea(this), this.X, this.Z));
   }
 
   /**
@@ -97,13 +105,8 @@ class Chunk {
    */
   freeMesh() {
     this._meshVersion++;
-
-    if (this.buffer) {
-      this.buffer.destroy(gl);
-      this.buffer = null;
-    }
-
-    this.faces = 0;
+    this.solidMesh = this._uploadMesh(this.solidMesh, null);
+    this.translucentMesh = this._uploadMesh(this.translucentMesh, null);
     this.complete = false;
     this.calculating = false;
   }
@@ -113,5 +116,34 @@ class Chunk {
    */
   unload() {
     this.freeMesh();
+  }
+
+  /**
+   * Replace a mesh on the GPU, reusing its buffer, or freeing it when there is nothing to draw
+   * @param {{buffer: Buffer, faces: number}|null} current Mesh on the GPU now
+   * @param {{vertices: Float32Array, indices: Uint32Array}|null} data New mesh data
+   * @returns {{buffer: Buffer, faces: number}|null} Mesh on the GPU
+   */
+  _uploadMesh(current, data) {
+    if (data == null || data.indices.length === 0) {
+      current?.buffer.destroy(gl);
+      return null;
+    }
+
+    const buffer = current?.buffer ?? new Buffer();
+    buffer.upload(gl, data.vertices, data.indices);
+    return { buffer: buffer, faces: data.indices.length / 6 };
+  }
+
+  /**
+   * Draw a mesh
+   * @param {{buffer: Buffer, faces: number}|null} mesh Mesh on the GPU
+   */
+  _drawMesh(mesh) {
+    if (mesh == null) return;
+
+    mesh.buffer.setUsing(gl);
+    setupVertexAttribs();
+    gl.drawElements(gl.TRIANGLES, 6 * mesh.faces, gl.UNSIGNED_INT, 0);
   }
 }

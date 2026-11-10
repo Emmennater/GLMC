@@ -66,14 +66,16 @@ function getShadeDirections() {
 }
 
 /**
- * Build the mesh of a chunk from its padded blocks
+ * Build the meshes of a chunk from its padded blocks: one for opaque and
+ * cutout blocks, and one for translucent blocks, which are drawn last
  * @param {Object} area Padded blocks from createMeshArea
  * @param {number} X World x of the chunk's corner
  * @param {number} Z World z of the chunk's corner
- * @returns {{vertices: Float32Array, indices: Uint32Array}} Mesh data sized to fit
+ * @returns {{solid: Object, translucent: Object}} Each with vertices and indices sized to fit
  */
 function buildChunkMesh(area, X, Z) {
-  const builder = new MeshBuilder();
+  const solid = new MeshBuilder();
+  const translucent = new MeshBuilder(16);
 
   for (let x = 0; x < LENGTH; x++) {
     for (let z = 0; z < WIDTH; z++) {
@@ -83,11 +85,21 @@ function buildChunkMesh(area, X, Z) {
         const id = area.blocks[column + y];
         if (id === BLOCK_AIR) continue;
 
+        const builder = BLOCK_LAYER[id] === LAYER_TRANSLUCENT ? translucent : solid;
         addBlockFaces(builder, area, column + y, X + x, y, Z + z, id);
       }
     }
   }
 
+  return { solid: finishMesh(solid), translucent: finishMesh(translucent) };
+}
+
+/**
+ * Copy a built mesh into arrays sized to fit
+ * @param {MeshBuilder} builder Built mesh
+ * @returns {{vertices: Float32Array, indices: Uint32Array}} Mesh data
+ */
+function finishMesh(builder) {
   return { vertices: builder.getVertices().slice(), indices: builder.getIndices().slice() };
 }
 

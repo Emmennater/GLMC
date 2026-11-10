@@ -43,6 +43,7 @@ function initWebgl() {
   glCache.vertDoFog = gl.getAttribLocation(program, 'vertDoFog');
   glCache.uPos = gl.getUniformLocation(program, 'uPos');
   glCache.uDist = gl.getUniformLocation(program, 'uDist');
+  glCache.uCutout = gl.getUniformLocation(program, 'uCutout');
 
   gl.uniform1f(glCache.uDist, 100);
 }
@@ -174,7 +175,12 @@ function createTextures() {
 
     gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    uploadAtlasMipmaps(img);
+
+    // Learn which tiles are see-through, which decides how blocks are drawn
+    const pixels = readImagePixels(img);
+    const tiles = getAtlasTiles(pixels, ATLAS_TILE_SIZE);
+    useAtlasTileLayers(tiles.layers);
+    uploadAtlasMipmaps(pixels, tiles);
   }
 
   // img.src = data.atlasLink + "?not-from-cache-please";
@@ -186,30 +192,39 @@ function createTextures() {
 }
 
 /**
+ * Read an image's RGBA pixels
+ * @param {HTMLImageElement} img Loaded image
+ * @returns {ImageData} Pixels
+ */
+function readImagePixels(img) {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.drawImage(img, 0, 0);
+  return context.getImageData(0, 0, img.width, img.height);
+}
+
+/**
  * Upload the atlas's mip levels to the bound texture, so distant blocks are
  * drawn from smaller copies instead of shimmering. Needs WebGL 2.
- * @param {HTMLImageElement} img Loaded atlas image
+ * @param {ImageData} pixels Atlas pixels
+ * @param {Object} tiles Tiles from getAtlasTiles
  */
-function uploadAtlasMipmaps(img) {
+function uploadAtlasMipmaps(pixels, tiles) {
   if (typeof WebGL2RenderingContext === 'undefined' || !(gl instanceof WebGL2RenderingContext)) return;
 
-  // Read the atlas's pixels
-  const pixels = document.createElement('canvas');
-  pixels.width = img.width;
-  pixels.height = img.height;
-  const context = pixels.getContext('2d', { willReadFrequently: true });
-  context.drawImage(img, 0, 0);
-
-  const levels = createAtlasMipmaps(context.getImageData(0, 0, img.width, img.height), ATLAS_TILE_SIZE);
+  const levels = createAtlasMipmaps(pixels, tiles, ATLAS_TILE_SIZE);
   levels.forEach((level, i) => {
     gl.texImage2D(gl.TEXTURE_2D, i, gl.RGBA, level.width, level.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, level.data);
   });
 
-  // Stop at one texel per tile, and sample a single level without blending.
-  // Blending levels would give cutouts like leaves half transparent edges,
-  // which hide whatever is drawn behind them later.
+  // Stop at one texel per tile, keep texels sharp within each level, and
+  // blend between levels. Cutout edges this leaves partly clear are drawn
+  // solid or not at all by the shader.
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, levels.length - 1);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
 }
 
 function setupMatricies() {
