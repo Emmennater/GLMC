@@ -4,23 +4,25 @@
  */
 class Chunk {
   /**
-   * Create an empty chunk
+   * Create a chunk from generated blocks
    * @param {number} x Chunk x coordinate
    * @param {number} z Chunk z coordinate
+   * @param {Uint8Array} blocks Block ids, empty if not given
+   * @param {Map<string, Uint32Array>} features Chunk key -> packed blocks this chunk's trees place in that chunk
    */
-  constructor(x, z) {
+  constructor(x, z, blocks = new Uint8Array(LENGTH * WIDTH * HEIGHT), features = new Map()) {
     this.x = x;
     this.z = z;
     this.X = this.x * LENGTH; // world x of the chunk's corner
     this.Z = this.z * WIDTH; // world z of the chunk's corner
-    this.blocks = new Uint8Array(LENGTH * WIDTH * HEIGHT);
-    this.features = new Map(); // chunk key -> packed blocks this chunk's trees place in that chunk
+    this.blocks = blocks;
+    this.features = features;
     this.decorated = false;
     this.buffer = null;
     this.faces = 0;
     this.complete = false;
     this.calculating = false;
-    this._meshVersion = 0; // bumped to cancel meshes still being built
+    this._meshVersion = 0; // bumped so meshes started earlier are ignored when they finish
   }
 
   /**
@@ -54,31 +56,40 @@ class Chunk {
   }
 
   /**
-   * Build the chunk's mesh and upload it to the GPU. The chunk and its
-   * neighbors must be decorated first.
-   * @param {boolean} overwrite Whether to spread the work over several frames
+   * Mark the chunk as having a mesh on the way. The chunk and its neighbors
+   * must be decorated first.
+   * @returns {number} Version to pass to setMesh when the mesh is built
    */
-  async calcVertices(overwrite = true) {
-    const version = ++this._meshVersion;
+  startMesh() {
     this.calculating = true;
+    return ++this._meshVersion;
+  }
 
-    const area = createMeshArea(this);
-    const builder = new MeshBuilder();
+  /**
+   * Upload a built mesh to the GPU, unless the chunk changed or was freed
+   * since the mesh was started
+   * @param {number} version Version from startMesh
+   * @param {Float32Array} vertices Vertex data
+   * @param {Uint32Array} indices Index data
+   */
+  setMesh(version, vertices, indices) {
+    if (version !== this._meshVersion) return;
 
-    for (let x = 0; x < LENGTH; x++) {
-      if (overwrite) {
-        await sleep(VertexWaitTime);
-
-        // Stop if the chunk was freed or a newer mesh was started
-        if (version !== this._meshVersion) return;
-      }
-
-      addChunkSlice(builder, area, this, x);
-    }
-
-    this._uploadMesh(builder);
+    if (this.buffer == null) this.buffer = new Buffer();
+    this.buffer.upload(gl, vertices, indices);
+    this.faces = indices.length / 6;
     this.calculating = false;
     this.complete = true;
+  }
+
+  /**
+   * Rebuild the mesh on the main thread right away, for changes the player
+   * should see immediately
+   */
+  buildMeshNow() {
+    const version = this.startMesh();
+    const mesh = buildChunkMesh(createMeshArea(this), this.X, this.Z);
+    this.setMesh(version, mesh.vertices, mesh.indices);
   }
 
   /**
@@ -102,16 +113,5 @@ class Chunk {
    */
   unload() {
     this.freeMesh();
-  }
-
-  /**
-   * Send a built mesh to the GPU
-   * @param {MeshBuilder} builder Built mesh
-   */
-  _uploadMesh(builder) {
-    if (this.buffer == null) this.buffer = new Buffer();
-
-    this.buffer.upload(gl, builder.getVertices(), builder.getIndices());
-    this.faces = builder.getFaceCount();
   }
 }

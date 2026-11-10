@@ -12,9 +12,7 @@ function setupData() {
   data.renderDistance = 8;
   data.renderedChunks = 0;
   data.fogDist = 10;
-  data.waitTime = 0;
   data.renderedChunks = [];
-  data.chunkDelay = 0.2;
   data.chunksGenerated = 0;
   data.dt = 0;
   data.fps = 0;
@@ -40,12 +38,6 @@ function setupData() {
   // data.atlasLink = "https://github.com/Emmennater/GLMC/blob/main/assets/atlas.png";
   data.atlasLink = "./assets/atlas.png";
 
-  /** LAZY CHUNKS **/
-  ChunkJob = null; // chunk whose generation is spread over several frames
-  TotalBlockGen = 0;
-  MaxBlockGen = 5000;
-  VertexWaitTime = 50;
-
   /** LOAD WORLD **/
   seedPhrase = null;
 
@@ -54,10 +46,6 @@ function setupData() {
   if (!seedPhrase) {
     seedPhrase = rnd(Math.random(), 10).toString().substring(2);
   }
-
-  seed = cyrb128("" + seedPhrase);
-  rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
-  noise.seed(seed[0] / 4 + seed[1] / 4 + seed[2] / 4 + seed[3] / 4);
 }
 
 function setupElements() {

@@ -28,14 +28,6 @@ class MeshBuilder {
   }
 
   /**
-   * Get the number of faces added so far
-   * @returns {number} Face count
-   */
-  getFaceCount() {
-    return this._indexLength / INDICES_PER_FACE;
-  }
-
-  /**
    * Get the vertices added so far
    * @returns {Float32Array} View of the vertex data
    */

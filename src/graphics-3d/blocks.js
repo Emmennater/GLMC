@@ -109,5 +109,5 @@ function remeshAround(x, z) {
   }
 
   for (const chunk of chunks)
-    chunk.calcVertices(false);
+    chunk.buildMeshNow();
 }

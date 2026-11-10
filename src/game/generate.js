@@ -1,239 +1,223 @@
 /**
- * Start generating a chunk. The work is spread over several frames by
- * runGenerationJob, and each chunk has its own random numbers so that a
- * freed chunk comes back the same when it is generated again.
- * @param {number} cx Chunk x coordinate
- * @param {number} cz Chunk z coordinate
- * @returns {Object} Generation job
+ * Generates chunks by following the rules of a terrain from terrain.js. It
+ * works only from its arguments and the world size globals, so it can run in
+ * a worker, and gives the same chunk every time and on every machine.
  */
-function createGenerationJob(cx, cz) {
-  return {
-    chunk: new Chunk(cx, cz),
-    x: 0, // next column to generate
-    z: 0,
-    random: createChunkRandom(cx, cz),
-    features: new Map() // chunk key -> packed blocks trees place there
-  };
+
+/**
+ * Get the terrain rules for a generation mode
+ * @param {string} mode Generation mode
+ * @returns {Object} Terrain from TERRAINS
+ */
+function getTerrain(mode) {
+  return TERRAINS[mode] ?? TERRAINS.normal;
+}
+
+/**
+ * Seed the noise the terrain uses from the world's seed phrase
+ * @param {string} seedPhrase World seed phrase
+ */
+function seedWorld(seedPhrase) {
+  const hash = cyrb128(`${seedPhrase}`);
+  noise.seed(hash[0] / 4 + hash[1] / 4 + hash[2] / 4 + hash[3] / 4);
 }
 
 /**
  * Create the random number generator for a chunk from the world seed
+ * @param {string} seedPhrase World seed phrase
  * @param {number} cx Chunk x coordinate
  * @param {number} cz Chunk z coordinate
  * @returns {function(): number} Generator of numbers in [0, 1)
  */
-function createChunkRandom(cx, cz) {
+function createChunkRandom(seedPhrase, cx, cz) {
   const hash = cyrb128(`${seedPhrase}:${cx},${cz}`);
   return sfc32(hash[0], hash[1], hash[2], hash[3]);
 }
 
 /**
- * Generate a chunk's terrain until it is done or the frame's block budget runs out
- * @param {Object} job Job from createGenerationJob
- * @returns {boolean} Whether the chunk is finished
+ * Generate a chunk's blocks and the blocks its features place. The noise
+ * must already be seeded for the world with seedWorld.
+ * @param {number} cx Chunk x coordinate
+ * @param {number} cz Chunk z coordinate
+ * @param {Object} terrain Terrain from TERRAINS
+ * @param {string} seedPhrase World seed phrase
+ * @returns {{blocks: Uint8Array, palette: Array<string|null>, features: Map<string, Uint32Array>}}
+ *   Blocks and features hold indices into the palette, where 0 is air
  */
-function runGenerationJob(job) {
-  for (; job.x < LENGTH; job.x++) {
-    for (; job.z < WIDTH; job.z++) {
+function generateChunk(cx, cz, terrain, seedPhrase) {
+  const random = createChunkRandom(seedPhrase, cx, cz);
+  const blocks = new Uint8Array(LENGTH * WIDTH * HEIGHT);
+  const palette = createPalette();
+  const features = new Map();
+  const place = createFeaturePlacer(cx, cz, palette, features);
+  const grid = sampleDensity(terrain, cx, cz);
+  const density = new Float64Array(grid.sizeY);
 
-      // Lazy chunks
-      if (TotalBlockGen > MaxBlockGen) {
-        TotalBlockGen = 0;
-        return false;
-      }
-
-      generateColumn(job, job.x, job.z);
+  for (let x = 0; x < LENGTH; x++) {
+    for (let z = 0; z < WIDTH; z++) {
+      getColumnDensity(grid, x, z, density);
+      fillColumn(blocks, x, z, density, grid.step, {
+        terrain: terrain,
+        palette: palette,
+        random: random,
+        place: place,
+        x: cx * LENGTH + x,
+        z: cz * WIDTH + z
+      });
     }
-    job.z = 0;
   }
 
-  for (const [key, blocks] of job.features)
-    job.chunk.features.set(key, Uint32Array.from(blocks));
+  const packed = new Map();
+  for (const [key, list] of features) packed.set(key, Uint32Array.from(list));
 
-  data.chunksGenerated++;
-  return true;
+  return { blocks: blocks, palette: palette.names, features: packed };
 }
 
 /**
- * Generate one column of a chunk's terrain
- * @param {Object} job Job from createGenerationJob
+ * Sample a terrain's density on a grid covering a chunk
+ * @param {Object} terrain Terrain from TERRAINS
+ * @param {number} cx Chunk x coordinate
+ * @param {number} cz Chunk z coordinate
+ * @returns {Object} Samples with the grid's step and size
+ */
+function sampleDensity(terrain, cx, cz) {
+  const step = terrain.sampleStep;
+  const sizeX = Math.ceil((LENGTH - 1) / step) + 1;
+  const sizeZ = Math.ceil((WIDTH - 1) / step) + 1;
+  const sizeY = Math.ceil((HEIGHT - 1) / step) + 1;
+  const samples = new Float64Array(sizeX * sizeZ * sizeY);
+
+  for (let i = 0; i < sizeX; i++) {
+    for (let k = 0; k < sizeZ; k++) {
+      for (let j = 0; j < sizeY; j++) {
+        const index = (i * sizeZ + k) * sizeY + j;
+        samples[index] = terrain.density(cx * LENGTH + i * step, j * step, cz * WIDTH + k * step);
+      }
+    }
+  }
+
+  return { samples: samples, step: step, sizeX: sizeX, sizeZ: sizeZ, sizeY: sizeY };
+}
+
+/**
+ * Blend the density samples around a column into its density at each sample height
+ * @param {Object} grid Samples from sampleDensity
  * @param {number} x Column x coordinate within the chunk
  * @param {number} z Column z coordinate within the chunk
+ * @param {Float64Array} out Density at each sample height
  */
-function generateColumn(job, x, z) {
-  const mode = data.mode;
-  const chunk = job.chunk;
-  const column = getBlockIndex(x, 0, z);
-  const x1 = x + chunk.X;
-  const z1 = z + chunk.Z;
+function getColumnDensity(grid, x, z, out) {
+  const { samples, step, sizeZ, sizeY } = grid;
+  const i = Math.min(Math.floor(x / step), grid.sizeX - 2);
+  const k = Math.min(Math.floor(z / step), sizeZ - 2);
+  const tx = x / step - i;
+  const tz = z / step - k;
 
-  // Superflat center
-  // if (dist2(0, 0, x1, z1) < 100) {
-  //     mode = "superflat";
-  // } else {
-  //     mode = "normal";
-  // }
+  // Columns of samples at the 4 corners around the column
+  const c00 = (i * sizeZ + k) * sizeY;
+  const c10 = ((i + 1) * sizeZ + k) * sizeY;
+  const c01 = (i * sizeZ + k + 1) * sizeY;
+  const c11 = ((i + 1) * sizeZ + k + 1) * sizeY;
 
-  let y1 = HEIGHT - 1;
-  if (mode == 'superflat') y1 = 5;
-  else if (mode == 'void') y1 = 1;
+  for (let j = 0; j < sizeY; j++) {
+    const near = samples[c00 + j] + (samples[c10 + j] - samples[c00 + j]) * tx;
+    const far = samples[c01 + j] + (samples[c11 + j] - samples[c01 + j]) * tx;
+    out[j] = near + (far - near) * tz;
+  }
+}
 
-  // noise terrain
-  // y1 = noise.simplex2(x1 / 100, z1 / 100) + 1;
-  // y1 += (noise.simplex2(x1 / 50 + 10, z1 / 50 + 10) + 1) ** 2 / 2;
-  // y1 += (noise.simplex2(x1 / 20 + 0.4, z1 / 20 + 1.5) + 1) / 12;
-  // y1 = floor(y1 * 10);
-
-  // y1 = 20;
-  // y1 += (noise.simplex2(x1/50, z1/50)+1) ** 2 * 10;
-  // y1 = floor(y1);
-
+/**
+ * Fill a column with blocks from the top down, so materials know how deep they are
+ * @param {Uint8Array} blocks Chunk's blocks
+ * @param {number} x Column x coordinate within the chunk
+ * @param {number} z Column z coordinate within the chunk
+ * @param {Float64Array} density Column density at each sample height
+ * @param {number} step Blocks between sample heights
+ * @param {Object} column Terrain, palette, random, feature placer and world x, z of the column
+ */
+function fillColumn(blocks, x, z, density, step, column) {
+  const { terrain, palette, random, place } = column;
+  const start = getBlockIndex(x, 0, z);
+  const last = density.length - 2;
   let depth = 0;
-  const START_Y = Math.min(y1, ChaosHills.MAX_HEIGHT);
-  for (let y = START_Y; y >= 0; y--) {
 
-    if (mode == 'normal' && !ChaosHills.generate(x1, y, z1)) {
+  for (let y = HEIGHT - 1; y >= 0; y--) {
+    const j = Math.min(Math.floor(y / step), last);
+    const below = density[j];
+    const above = density[j + 1];
+
+    // Blending can't make solid blocks between two air samples, so skip to the bottom of the cell
+    if (below > 0 && above > 0) {
+      depth = 0;
+      y = j * step;
+      continue;
+    }
+
+    if (below + (above - below) * (y / step - j) > 0) {
       depth = 0;
       continue;
     }
 
-    // Resource height map
-    const type = depthMap(mode, depth, y, x1, y, z1, job.random);
-
+    const type = terrain.material(depth, column.x, y, column.z, random);
     if (!type) {
       depth = 0;
       continue;
     }
 
     depth++;
-
-    // Spawning trees
-    if (mode == 'normal' && type == 'grass') {
-      const rnd = job.random();
-      const FREQ = 0.01;
-      if (rnd < FREQ / 2) spawnTree(job, x1, y, z1);
-      else if (rnd < FREQ) spawnTree(job, x1, y, z1, 'birch_log', 'birch_leaves');
-    }
-
-    chunk.blocks[column + y] = getBlockTypeId(type);
-    TotalBlockGen++;
+    terrain.feature(type, column.x, y, column.z, random, place);
+    blocks[start + y] = getPaletteIndex(palette, type);
   }
 }
 
 /**
- * Pick the block for a position from how far it is below the surface
- * @param {string} mode Generation mode
- * @param {number} depth Number of solid blocks above in this column
- * @param {number} elev Height of the block
- * @param {number} x World x coordinate
- * @param {number} y World y coordinate
- * @param {number} z World z coordinate
- * @param {function(): number} random Chunk's random number generator
- * @returns {string|null} Block type
+ * Create a palette that numbers block types in the order they are first used
+ * @returns {{names: Array<string|null>, indices: Map<string, number>}} Palette with air at 0
  */
-function depthMap(mode, depth, elev, x, y, z, random) {
-
-  if (mode == 'void') {
-    return 'void_block';
-    // return "smooth_stone";
-    // return "black_grid_block";
-    // if (y == 40) return "glass";
-    // if ((Math.abs(x)+Math.abs(y)+Math.abs(z)) % 3 == 1) return null;
-    // else return "glass";
-  }
-
-  if (elev < 4) {
-    switch (elev) {
-      case 0: return 'bedrock';
-      case 1: if (random() < 0.75) return 'bedrock';
-      case 2: if (random() < 0.5) return 'bedrock';
-      case 3: if (random() < 0.25) return 'bedrock';
-    }
-  }
-
-  // if (data.superflat) return "stone";
-  // const stoneHeight = 105;
-  const stoneHeight = 150;
-  const stoneElev = stoneHeight + noise.simplex2(x / 15 + 0.2, y / 15 + 0.4) * 3;
-
-  // Grassy
-  if (elev < stoneElev) {
-    if (depth < 1) return 'grass';
-    if (depth < 4) return 'dirt';
-    return 'stone';
-  }
-
-  // Stone peaks
-  if (elev < 50) {
-    return 'stone';
-  }
-
-  return 'stone';
+function createPalette() {
+  return { names: [null], indices: new Map() };
 }
 
 /**
- * Record a tree's blocks, which can reach into neighboring chunks
- * @param {Object} job Job generating the chunk the tree grows from
- * @param {number} x World x coordinate of the ground block
- * @param {number} y World y coordinate of the ground block
- * @param {number} z World z coordinate of the ground block
- * @param {string} log Trunk block type
- * @param {string} leaves Leaf block type
- * @returns {boolean} Whether the tree was placed
- */
-function spawnTree(job, x, y, z, log = 'log', leaves = 'leaves') {
-  if (y >= HEIGHT) return false;
-
-  // Tree Height
-  const h = Math.floor(job.random() * 3 + 4);
-
-  // Lower Leaves
-  for (let x1 = -2; x1 <= 2; x1++) {
-    for (let y1 = h - 3; y1 < h - 1; y1++) {
-      for (let z1 = -2; z1 <= 2; z1++) {
-        addFeatureBlock(job, leaves, x + x1, y + y1, z + z1, true);
-      }
-    }
-  }
-
-  // Upper Leaves
-  for (let x1 = -1; x1 <= 1; x1++) {
-    for (let y1 = -1; y1 < 1; y1++) {
-      for (let z1 = -1; z1 <= 1; z1++) {
-        if (Math.abs(x1) == Math.abs(z1) && y1 > -1 && x1) continue;
-        addFeatureBlock(job, leaves, x + x1, y + y1 + h, z + z1, true);
-      }
-    }
-  }
-
-  // Trunk
-  for (let i = 0; i < h; i++)
-    addFeatureBlock(job, log, x, y + i, z);
-  addFeatureBlock(job, 'dirt', x, y - 1, z);
-
-  // Success
-  return true;
-}
-
-/**
- * Record a block a feature like a tree places, in whichever chunk it lands
- * @param {Object} job Job generating the chunk the feature comes from
+ * Get a block type's index in a palette, adding it if needed
+ * @param {Object} palette Palette from createPalette
  * @param {string} type Block type
- * @param {number} x World x coordinate
- * @param {number} y World y coordinate
- * @param {number} z World z coordinate
- * @param {boolean} airOnly Whether the block only replaces air
+ * @returns {number} Palette index
  */
-function addFeatureBlock(job, type, x, y, z, airOnly = false) {
-  if (y >= HEIGHT || y < 0) return;
+function getPaletteIndex(palette, type) {
+  let index = palette.indices.get(type);
+  if (index === undefined) {
+    index = palette.names.length;
+    palette.names.push(type);
+    palette.indices.set(type, index);
+  }
+  return index;
+}
 
-  const cx = floor(x / LENGTH);
-  const cz = floor(z / WIDTH);
-  const key = getChunkKey(cx, cz);
-  const index = getBlockIndex(x - cx * LENGTH, y, z - cz * WIDTH);
+/**
+ * Create the function terrain features use to place blocks, which records
+ * each block under the chunk it lands in
+ * @param {number} cx Chunk x coordinate of the chunk being generated
+ * @param {number} cz Chunk z coordinate of the chunk being generated
+ * @param {Object} palette Palette from createPalette
+ * @param {Map<string, number[]>} features Chunk key -> packed blocks placed there
+ * @returns {function(string, number, number, number, boolean=)} Places a block by type and world position
+ */
+function createFeaturePlacer(cx, cz, palette, features) {
+  return (type, x, y, z, airOnly = false) => {
+    if (y < 0 || y >= HEIGHT) return;
 
-  if (!job.features.has(key)) job.features.set(key, []);
-  job.features.get(key).push(packFeatureBlock(index, getBlockTypeId(type), airOnly));
+    const tx = floor(x / LENGTH);
+    const tz = floor(z / WIDTH);
+    if (Math.abs(tx - cx) > 1 || Math.abs(tz - cz) > 1)
+      throw new Error(`Feature block at ${x},${y},${z} is more than one chunk from chunk ${cx},${cz}`);
+
+    const key = getChunkKey(tx, tz);
+    if (!features.has(key)) features.set(key, []);
+
+    const index = getBlockIndex(x - tx * LENGTH, y, z - tz * WIDTH);
+    features.get(key).push(packFeatureBlock(index, getPaletteIndex(palette, type), airOnly));
+  };
 }
 
 /**
@@ -263,24 +247,19 @@ function applyFeatureBlocks(blocks, features) {
   }
 }
 
-function biomeBlendGen(heat, moisture, ...Algorithms) {
+/**
+ * Convert a generated chunk from palette indices to block ids in place
+ * @param {Object} generated Result of generateChunk
+ * @param {Uint8Array} ids Block id for each palette index
+ */
+function remapGeneratedChunk(generated, ids) {
+  const blocks = generated.blocks;
+  for (let i = 0; i < blocks.length; i++) blocks[i] = ids[blocks[i]];
 
-}
-
-class Biome {
-  static generate(x, y, z) {
-    return true;
-  }
-}
-
-class ChaosHills extends Biome {
-  static MAX_HEIGHT = (4 * 20);
-
-  static generate(x, y, z) {
-    // y *= 0.5;
-    let value = noise.simplex3(x / 50, z / 50, y / 50) - 1;
-    value += noise.simplex3(x / 25 + 10, z / 25 + 20, y / 25 + 30) ** 2 - 1;
-    value += y / 20;
-    return value <= 1.0;
+  for (const features of generated.features.values()) {
+    for (let i = 0; i < features.length; i++) {
+      const id = ids[(features[i] >>> 16) & 0xff];
+      features[i] = ((features[i] & 0xff00ffff) | (id << 16)) >>> 0;
+    }
   }
 }

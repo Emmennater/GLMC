@@ -41,6 +41,24 @@ function getBlockTypeName(id) {
 }
 
 /**
+ * Get every registered type name in id order
+ * @returns {Array<string|null>} Type names, starting with air
+ */
+function getBlockTypeNames() {
+  return BLOCK_TYPES;
+}
+
+/**
+ * Register type names in the same order as another registry, so block ids
+ * mean the same thing in a worker as on the main thread
+ * @param {Array<string|null>} names Type names in id order, from getBlockTypeNames
+ */
+function syncBlockTypes(names) {
+  for (let id = BLOCK_TYPES.length; id < names.length; id++)
+    registerBlockType(names[id]);
+}
+
+/**
  * Add a block type to the registry and cache its properties
  * @param {string} type Block type name
  * @returns {number} Id given to the type

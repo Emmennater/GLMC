@@ -230,11 +230,6 @@ function loadWorld(string) {
 
   for (const { cx, cz, index, type } of readSaveEdits(input))
     data.edits.loadBlock(cx, cz, index, getBlockTypeId(type));
-
-  // Update seeds
-  seed = cyrb128(""+seedPhrase);
-  rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
-  noise.seed(seed[0]/4 + seed[1]/4 + seed[2]/4 + seed[3]/4);
 }
 
 function download(filename, text) {
@@ -253,11 +248,10 @@ function download(filename, text) {
 }
 
 /**
- * Free every loaded chunk and stop any chunk being generated
+ * Free every loaded chunk and drop the work in progress on them
  */
 function clearWorld() {
-  unloadAllChunks();
-  ChunkJob = null;
+  resetChunkLoader();
   data.renderedChunks = [];
 }
 

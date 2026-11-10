@@ -24,7 +24,8 @@ const CORNER_SHADOWS = [0, 0, 0, 0];
 
 /**
  * Copy a chunk's blocks and a one block border from its neighbors into one
- * array, so meshing can look up any neighbor with a single index offset
+ * array, so meshing can look up any neighbor with a single index offset.
+ * The result is plain data, so it can be sent to a worker.
  * @param {Chunk} chunk Chunk to mesh
  * @returns {Object} Padded block array with the offsets used to step through it
  */
@@ -69,23 +70,29 @@ function getShadeDirections() {
 }
 
 /**
- * Add the faces of every block in one x slice of a chunk to a mesh
- * @param {MeshBuilder} builder Mesh to add to
+ * Build the mesh of a chunk from its padded blocks
  * @param {Object} area Padded blocks from createMeshArea
- * @param {Chunk} chunk Chunk being meshed
- * @param {number} x Slice x coordinate within the chunk
+ * @param {number} X World x of the chunk's corner
+ * @param {number} Z World z of the chunk's corner
+ * @returns {{vertices: Float32Array, indices: Uint32Array}} Mesh data sized to fit
  */
-function addChunkSlice(builder, area, chunk, x) {
-  for (let z = 0; z < WIDTH; z++) {
-    const column = (x + 1) * area.strideX + (z + 1) * area.strideZ + 1;
+function buildChunkMesh(area, X, Z) {
+  const builder = new MeshBuilder();
 
-    for (let y = 0; y < HEIGHT; y++) {
-      const id = area.blocks[column + y];
-      if (id === BLOCK_AIR) continue;
+  for (let x = 0; x < LENGTH; x++) {
+    for (let z = 0; z < WIDTH; z++) {
+      const column = (x + 1) * area.strideX + (z + 1) * area.strideZ + 1;
 
-      addBlockFaces(builder, area, column + y, chunk.X + x, y, chunk.Z + z, id);
+      for (let y = 0; y < HEIGHT; y++) {
+        const id = area.blocks[column + y];
+        if (id === BLOCK_AIR) continue;
+
+        addBlockFaces(builder, area, column + y, X + x, y, Z + z, id);
+      }
     }
   }
+
+  return { vertices: builder.getVertices().slice(), indices: builder.getIndices().slice() };
 }
 
 /**
