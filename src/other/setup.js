@@ -9,7 +9,7 @@ function setupData() {
   TOPCANVAS = null;
   data = {};
   settings = {};
-  data.renderDistance = 12;
+  data.renderDistance = 16;
   data.renderedChunks = 0;
   data.fogDist = 10;
   data.renderedChunks = [];
@@ -18,6 +18,8 @@ function setupData() {
   data.fps = 0;
   settings.fog = true;
   settings.hand = "right";
+  settings.ssaa = 2; // supersampling, in samples per pixel along each axis: 1 is off, up to 4
+  settings.msaa = 0; // multisampling, in samples per pixel: 0 is off, up to what the GPU allows
   data.mode = "normal";
   data.updateFps = 0;
   data.edits = new ChunkEdits();

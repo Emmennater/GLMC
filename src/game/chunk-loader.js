@@ -288,9 +288,16 @@ function renderChunks() {
   data.furthestChunk = 0;
   const translucent = [];
 
-  // Opaque and cutout blocks: each texel is drawn solid or not at all, so
-  // they hide what is behind them correctly whatever order they are drawn in
-  gl.uniform1f(glCache.uCutout, 1);
+  // Opaque and cutout blocks: each sample is drawn solid or not at all, so
+  // they hide what is behind them correctly whatever order they are drawn in.
+  // With MSAA, a texel's alpha decides how many of a pixel's samples it
+  // covers, which smooths the edges of leaves.
+  const coverage = sceneTarget.isMultisampled();
+  gl.uniform1i(glCache.uAlphaMode, coverage ? ALPHA_COVERAGE : ALPHA_TEST);
+  if (coverage) {
+    gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+    gl.disable(gl.BLEND);
+  }
 
   for (let x = -r + cx; x <= r + cx; x++) {
     for (let z = -r + cz; z <= r + cz; z++) {
@@ -308,9 +315,14 @@ function renderChunks() {
     }
   }
 
+  if (coverage) {
+    gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+    gl.enable(gl.BLEND);
+  }
+
   // Translucent blocks: blended over what is already drawn, furthest first,
   // without hiding each other
-  gl.uniform1f(glCache.uCutout, 0);
+  gl.uniform1i(glCache.uAlphaMode, ALPHA_BLEND);
   gl.depthMask(false);
 
   translucent.sort((a, b) => b.distance - a.distance);

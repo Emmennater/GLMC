@@ -77,6 +77,17 @@ function initCanvasElements() {
       console.log(floor(player.x), floor(player.y), floor(player.z));
     }
 
+    // Cycle supersampling: off, 2x2, 3x3, 4x4
+    if (KEY == "O") {
+      settings.ssaa = settings.ssaa % MAX_SSAA_FACTOR + 1;
+    }
+
+    // Cycle multisampling through the sample counts the GPU supports
+    if (KEY == "M") {
+      const options = sceneTarget.getSampleOptions();
+      settings.msaa = options[(options.indexOf(settings.msaa) + 1) % options.length];
+    }
+
     if (KEY == "B") {
       player.toggleGamemode();
     }

@@ -39,7 +39,7 @@ attribute vec2 vertShaCoord;
 attribute float vertDoFog;
 
 // Output variables
-varying vec2 fragTexCoord;
+CENTROID varying vec2 fragTexCoord; // sampled inside the face even when MSAA shades a pixel whose center is outside it
 varying vec3 fragPosition;
 varying vec4 fragShadow;
 varying vec2 fragShaCoord;
@@ -70,6 +70,11 @@ void main() {
 
 `;
 
+// How the block shader treats a texel's alpha, set with the uAlphaMode uniform
+const ALPHA_BLEND = 0; // blended over what is behind it, for translucent blocks
+const ALPHA_TEST = 1; // drawn solid or not at all, for opaque and cutout blocks
+const ALPHA_COVERAGE = 2; // decides how many of a pixel's samples are covered, for cutout blocks with MSAA
+
 var fragmentShaderSrc = `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
   precision highp float;
@@ -77,7 +82,7 @@ var fragmentShaderSrc = `
   precision mediump float;
 #endif
 
-varying vec2 fragTexCoord;
+CENTROID varying vec2 fragTexCoord;
 varying vec3 fragPosition;
 varying vec4 fragShadow;
 varying vec2 fragShaCoord;
@@ -85,7 +90,7 @@ varying float fragDoFog;
 // varying vec4 fragColor;
 varying float fragFog;
 uniform sampler2D sampler;
-uniform float uCutout; // 1 while drawing opaque and cutout blocks
+uniform int uAlphaMode;
 
 int modulo(int num, int divisor) {
   return int(num - divisor * int(num / divisor));
@@ -121,10 +126,11 @@ void main() {
   // vec4 vecFog = vec4(1, 1, 1, 1.0 - fragFog);
   vec4 color = texture2D(sampler, fragTexCoord);
   bool grass = !( color.g > color.r && color.g - color.b > 0.1 );
+  float coverage = color.a;
 
   // Cutout texels are either drawn solid or not at all, like Minecraft's
   // cutout layer, so blended mipmap edges never hide what is behind them
-  if (uCutout > 0.5) {
+  if (uAlphaMode == ${ALPHA_TEST}) {
     if (color.a < 0.5) discard;
     color.a = 1.0;
   }
@@ -149,9 +155,79 @@ void main() {
 
   color = fog(color); //  * vec4(1, grass, grass, 1)
   // color = c;
+
+  // The texel's alpha becomes the share of the pixel's samples it covers.
+  // The soft edge of partly covered texels is narrowed to about a pixel, so
+  // leaf edges are smoothed without faint distant leaves showing as
+  // see-through patterns.
+  //
+  // Texels within a step of fully opaque or fully clear are snapped to it
+  // instead: blending mip levels can leave opaque texels a hair below 1, and
+  // at face edges the screen-space slope also measures pixels outside the
+  // face, so sharpening them would punch holes along the edges of solid blocks.
+  if (uAlphaMode == ${ALPHA_COVERAGE}) {
+    const float STEP = 1.0 / 255.0;
+#ifdef WEBGL2
+    float sharpened = clamp((coverage - 0.5) / max(fwidth(coverage), 0.0001) + 0.5, 0.0, 1.0);
+#else
+    float sharpened = coverage;
+#endif
+    if (coverage >= 1.0 - STEP) coverage = 1.0;
+    else if (coverage <= STEP) coverage = 0.0;
+    else coverage = sharpened;
+    color.a = coverage;
+  }
   if (color.a == 0.0) discard;
 
   gl_FragColor = color;
 }
 
+`;
+
+/**
+ * Supersampling: the scene is drawn at several times the screen's size, then
+ * each block of factor by factor texels is averaged into one screen pixel.
+ * Colors are averaged in linear light so edges don't come out too dark.
+ */
+
+const MAX_SSAA_FACTOR = 4; // largest supersampling factor along each axis
+
+var downsampleVertexShaderSrc = `
+attribute vec2 aPosition;
+
+void main() {
+  gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+`;
+
+var downsampleFragmentShaderSrc = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+  precision highp float;
+#else
+  precision mediump float;
+#endif
+
+const int MAX_FACTOR = ${MAX_SSAA_FACTOR};
+
+uniform sampler2D uScene;
+uniform vec2 uSceneSize; // texels
+uniform int uFactor; // texels per screen pixel along each axis
+
+void main() {
+  vec4 sum = vec4(0.0);
+
+  for (int i = 0; i < MAX_FACTOR; i++) {
+    if (i >= uFactor) break;
+    for (int j = 0; j < MAX_FACTOR; j++) {
+      if (j >= uFactor) break;
+
+      vec2 texel = floor(gl_FragCoord.xy) * float(uFactor) + vec2(float(i), float(j)) + 0.5;
+      vec4 color = texture2D(uScene, texel / uSceneSize);
+      sum += vec4(pow(color.rgb, vec3(2.2)), color.a);
+    }
+  }
+
+  sum /= float(uFactor * uFactor);
+  gl_FragColor = vec4(pow(sum.rgb, vec3(1.0 / 2.2)), sum.a);
+}
 `;

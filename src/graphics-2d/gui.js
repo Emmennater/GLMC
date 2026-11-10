@@ -21,6 +21,14 @@ function initGui() {
     Components.push(new GuiComponenet(gui, ()=>"XYZ: "+floor(player.x)+" "+floor(player.y)+" "+floor(player.z)));
     Components.push(new GuiComponenet(gui, ()=>"chunks: "+data.chunksGenerated));
     Components.push(new GuiComponenet(gui, ()=>"seed: "+seedPhrase));
+    Components.push(new GuiComponenet(gui, ()=>{
+        const factor = sceneTarget.getFactor();
+        return "SSAA: " + (factor > 1 ? factor + "x" + factor : "off");
+    }));
+    Components.push(new GuiComponenet(gui, ()=>{
+        const samples = sceneTarget.getSamples();
+        return "MSAA: " + (samples > 0 ? samples + "x" : "off");
+    }));
 }
 
 function animateIntro() {

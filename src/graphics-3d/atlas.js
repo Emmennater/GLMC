@@ -18,10 +18,11 @@ const LAYER_TRANSLUCENT = 2; // some texels partly clear, like tinted glass
 
 /**
  * Create the atlas and smaller copies of it for distant blocks, down to one
- * texel per tile so no level mixes neighboring tiles. Opaque and cutout tiles
- * keep fully opaque or fully clear texels at every level, so leaves keep sharp
- * edges instead of fading out. Colors are averaged by alpha, and clear texels
- * take their tile's color, so blending between levels never darkens edges.
+ * texel per tile so no level mixes neighboring tiles. Alpha is averaged, so
+ * for cutouts like leaves it is how much of the texel the leaves cover; the
+ * block shader turns that into solid or clear texels, or into MSAA coverage.
+ * Colors are averaged by alpha, and clear texels take their tile's color, so
+ * blending between levels never darkens edges.
  * @param {{width: number, height: number, data: Uint8ClampedArray}} image Full size RGBA pixels
  * @param {Object} tiles Tiles from getAtlasTiles
  * @param {number} tileSize Tile size in px
@@ -33,7 +34,7 @@ function createAtlasMipmaps(image, tiles, tileSize) {
   const levels = [level];
 
   for (let size = tileSize / 2; size >= 1; size /= 2) {
-    level = halveAtlasLevel(level, tiles, size);
+    level = halveAtlasLevel(level);
     fillClearTexels(level, tiles, size);
     levels.push(level);
   }
@@ -97,11 +98,9 @@ function fillClearTexels(level, tiles, tileSize) {
 /**
  * Average each 2 by 2 block of texels into one
  * @param {{width: number, height: number, data: ArrayLike<number>}} level Previous mip level
- * @param {{columns: number, layers: Uint8Array}} tiles Tiles from getAtlasTiles
- * @param {number} tileSize Tile size in px at the new level
  * @returns {{width: number, height: number, data: Uint8Array}} Half size mip level
  */
-function halveAtlasLevel(level, tiles, tileSize) {
+function halveAtlasLevel(level) {
   const width = level.width / 2;
   const height = level.height / 2;
   const data = new Uint8Array(width * height * 4);
@@ -123,16 +122,12 @@ function halveAtlasLevel(level, tiles, tileSize) {
       }
 
       const out = (y * width + x) * 4;
-      const tile = Math.floor(y / tileSize) * tiles.columns + Math.floor(x / tileSize);
       if (a > 0) {
         data[out] = Math.round(r / a);
         data[out + 1] = Math.round(g / a);
         data[out + 2] = Math.round(b / a);
       }
-
-      // Cutouts stay solid where at least half the texels were
-      const binary = tiles.layers[tile] !== LAYER_TRANSLUCENT;
-      data[out + 3] = binary ? (a >= 2 * 255 ? 255 : 0) : Math.round(a / 4);
+      data[out + 3] = Math.round(a / 4);
     }
   }
 

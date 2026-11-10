@@ -29,7 +29,9 @@ function initWebgl() {
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-  program = createProgramObject(gl, vertexShaderSrc, fragmentShaderSrc);
+  program = createProgramObject(gl,
+    prepareShaderSource(gl, vertexShaderSrc, gl.VERTEX_SHADER),
+    prepareShaderSource(gl, fragmentShaderSrc, gl.FRAGMENT_SHADER));
 
   // Tell WebGL the program to run
   gl.useProgram(program);
@@ -43,9 +45,33 @@ function initWebgl() {
   glCache.vertDoFog = gl.getAttribLocation(program, 'vertDoFog');
   glCache.uPos = gl.getUniformLocation(program, 'uPos');
   glCache.uDist = gl.getUniformLocation(program, 'uDist');
-  glCache.uCutout = gl.getUniformLocation(program, 'uCutout');
+  glCache.uAlphaMode = gl.getUniformLocation(program, 'uAlphaMode');
 
   gl.uniform1f(glCache.uDist, 100);
+}
+
+/**
+ * Prepare shader source written in GLSL ES 1.00 for the context. With WebGL 2
+ * it is compiled as GLSL ES 3.00, which adds centroid sampling and fwidth;
+ * defines map the old keywords onto the new ones, and WEBGL2 is defined so
+ * shaders can use the newer features where they are available.
+ * @param {WebGLRenderingContext} gl WebGL context
+ * @param {string} source GLSL ES 1.00 source
+ * @param {number} type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
+ * @returns {string} Source to compile
+ */
+function prepareShaderSource(gl, source, type) {
+  if (typeof WebGL2RenderingContext === 'undefined' || !(gl instanceof WebGL2RenderingContext))
+    return `#define CENTROID\n${source}`;
+
+  const header = ['#version 300 es', '#define WEBGL2', '#define CENTROID centroid', '#define texture2D texture'];
+  if (type === gl.VERTEX_SHADER) {
+    header.push('#define attribute in', '#define varying out');
+  } else {
+    header.push('#define varying in', 'out highp vec4 fragColorOut;', '#define gl_FragColor fragColorOut');
+  }
+
+  return `${header.join('\n')}\n${source}`;
 }
 
 function createProgramObject(gl, vertexShaderSrc, fragmentShaderSrc) {
@@ -70,7 +96,7 @@ function createProgramObject(gl, vertexShaderSrc, fragmentShaderSrc) {
   }
   
   // Create program and attach shaders
-  program = gl.createProgram();
+  const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);

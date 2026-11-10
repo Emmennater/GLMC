@@ -22,6 +22,7 @@ var initProgram = async function() {
   // Draw hotbar
   initWebgl2D();
   initWebgl();
+  sceneTarget = new SceneTarget(gl);
   initGui();
   createTextures();
   initCanvasElements();
@@ -95,9 +96,8 @@ var initProgram = async function() {
     // Intro
     animateIntro();
 
-    // Clear sky
-    gl.clearColor(sky.r, sky.g, sky.b, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // Clear to the sky, off screen when anti-aliasing
+    sceneTarget.begin(settings.ssaa, settings.msaa, sky);
 
     drawBuffer.setAttributes(gl);
     renderFog(gl);
@@ -125,6 +125,9 @@ var initProgram = async function() {
       // Draw the elements
       gl.drawElements(gl.TRIANGLES, buffers[i].indices.length, gl.UNSIGNED_INT, 0); // triangles, skip 0, 3 verticies
     }
+
+    // Resolve the anti-aliased scene onto the screen
+    sceneTarget.end();
 
     moveX = 0;
     moveY = 0;
